@@ -148,9 +148,42 @@
                 cursor: pointer;
             }
 
-            .uploaded-files {
+			.uploaded-files {
                 margin-top: 20px;
                 text-align: left;
+                max-height: 300px;  /* Set a maximum height */
+                overflow-y: auto;   /* Enable vertical scrolling */
+                scrollbar-width: thin;  /* Thin scrollbar for Firefox */
+                scrollbar-color: #424242 #1e1e1e;  /* Scrollbar color for Firefox */
+                display: flex;
+                flex-direction: column;
+                min-height: 100px;  /* Ensure minimum height for vertical centering */
+            }
+
+            .uploaded-files:empty {
+                display: none;  /* Hide when no files are uploaded */
+            }
+
+            .uploaded-files:empty + #continueButton {
+                display: none !important;  /* Hide continue button when no files */
+            }
+
+            /* Webkit (Chrome, Safari, newer versions of Opera) scrollbar styling */
+            .uploaded-files::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            .uploaded-files::-webkit-scrollbar-track {
+                background: #1e1e1e;
+            }
+
+            .uploaded-files::-webkit-scrollbar-thumb {
+                background-color: #424242;
+                border-radius: 4px;
+            }
+
+            .uploaded-files::-webkit-scrollbar-thumb:hover {
+                background-color: #666;
             }
 
             .file-item {
@@ -626,53 +659,44 @@
                 "BEDP": "Beckton DLR Depot"
             };
 
-            // Enhanced drag and drop handling
-            const dropZone = document.getElementById('dropZone');
-            const fileInput = document.getElementById('fileInput');
-
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, preventDefaults, false);
-                document.body.addEventListener(eventName, preventDefaults, false);
-            });
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, highlight, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, unhighlight, false);
-            });
-
-            dropZone.addEventListener('drop', handleDrop, false);
-            fileInput.addEventListener('change', handleFileSelect, false);
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            function highlight(e) {
-                dropZone.classList.add('drag-over');
-            }
-
-            function unhighlight(e) {
-                dropZone.classList.remove('drag-over');
-            }
-
-            function handleDrop(e) {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                handleFiles(files);
-            }
-
-            function handleFileSelect(e) {
-                const files = e.target.files;
-                handleFiles(files);
-            }
-
-            function handleFiles(files) {
-                Array.from(files).forEach(processFile);
-            }
+			// Enhanced drag and drop handling
+			const dropZone = document.getElementById('dropZone');
+			const fileInput = document.getElementById('fileInput');
+			['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+				document.addEventListener(eventName, preventDefaults, false);
+			});
+			['dragenter', 'dragover'].forEach(eventName => {
+				document.addEventListener(eventName, highlight, false);
+			});
+			['dragleave', 'drop'].forEach(eventName => {
+				document.addEventListener(eventName, unhighlight, false);
+			});
+			document.addEventListener('drop', handleDrop, false);
+			fileInput.addEventListener('change', handleFileSelect, false);
+			function preventDefaults(e) {
+				e.preventDefault();
+				e.stopPropagation();
+			}
+			function highlight(e) {
+				if (e.dataTransfer.types.includes('Files')) {
+					dropZone.classList.add('drag-over');
+				}
+			}
+			function unhighlight(e) {
+				dropZone.classList.remove('drag-over');
+			}
+			function handleDrop(e) {
+				const dt = e.dataTransfer;
+				const files = dt.files;
+				handleFiles(files);
+			}
+			function handleFileSelect(e) {
+				const files = e.target.files;
+				handleFiles(files);
+			}
+			function handleFiles(files) {
+				Array.from(files).forEach(processFile);
+			}
 
             function processFile(file) {
                 const reader = new FileReader();
