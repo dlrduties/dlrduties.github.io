@@ -1835,10 +1835,7 @@ END:VEVENT
 				let finishTime = endTime;
 
 				// Handle times after midnight
-				if (hours >= 24) {
-					const nextDay = new Date(date);
-					nextDay.setDate(nextDay.getDate() + 1);
-					finishDate = formatDateForICS(nextDay.toISOString().split('T')[0]);
+				if (hours >= 24) {
 					finishTime = '23:59';
 				}
 
