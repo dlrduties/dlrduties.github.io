@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>DLR Duty Tool</title>
+        <style>
+		    :root {
+				--base-color: #03BC00;
+				--temp-color: #3559E8;
+			}
+		 
+			body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #121212;
+                color: #ffffff;
+                margin: 0;
+                padding: 16px;
+            }
+
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+
+            h1 {
+                color: #1e88e5;
+                text-align: center;
+                margin-bottom: 20px;
+                font-size: 32px;
+            }
+
+            h2 {
+                font-size: 24px;
+                margin-top: 24px;
+            }
+
+			a {
+				color: #1e88e5;
+				text-decoration: none;
+			}
+
+			#aboutText {
+				margin-top: 10px;
+				background-color: #1e1e1e;
+				padding: 10px;
+				border-radius: 5px;
+				border: 1px solid #424242;
+			}
+
+            input, button, textarea {
+                height: 36px;
+                background-color: #1e1e1e;
+                color: #ffffff;
+                border: 1px solid #424242;
+                border-radius: 5px;
+                box-sizing: border-box;
+                font-size: 14px;
+            }
+
+            textarea {
+                height: auto;
+                padding: 10px;
+                width: 100%;
+                font-family: monospace;
+            }
+
+            button {
+                background-color: #1e88e5;
+                border: none;
+                padding: 8px 16px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+
+            button:hover {
+                background-color: #1565c0;
+            }
+
+            button:disabled {
+                background-color: #424242;
+                cursor: not-allowed;
+            }
+            
+            input:not(#dutyHtml) {
+                text-align: center;
+            }
+            
+            input::placeholder {
+                text-align: center;
+                text-transform: none
+            }           
+
+            /* Splash screen styles */
+			.splash-screen {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background-color: #121212;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				z-index: 1000;
+			}
+
+			.splash-content {
+				position: relative;
+				text-align: center;
+				padding: 20px;
+				background-color: #1e1e1e;
+				border-radius: 10px;
+				max-width: 500px;
+				width: 90%;
+			}
+
+            .splash-title {
+                color: #1e88e5;
+                margin-bottom: 20px;
+                font-size: 24px;
+            }
+
+            /* Enhanced drag and drop area */
+            .file-upload-area {
+                border: 2px dashed #424242;
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                position: relative;
+            }
+
+            .file-upload-area.drag-over {
+                border-color: #1e88e5;
+                background-color: rgba(30, 136, 229, 0.1);
+            }
+
+            .file-upload-area input[type="file"] {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                opacity: 0;
+                cursor: pointer;
+            }
+
+            .uploaded-files {
+                margin-top: 20px;
+                text-align: left;
+            }
+
+            .file-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px;
+                background-color: #242424;
+                margin: 4px 0;
+                border-radius: 4px;
+            }
+
+            .file-type-indicator {
+                font-size: 12px;
+                padding: 2px 6px;
+                border-radius: 3px;
+                margin-right: 8px;
+                display: inline-block;
+            }
+
+            .file-type-base {
+                background-color: var(--base-color);
+            }
+
+            .file-type-temp {
+                background-color: var(--temp-color);
+            }
+
+            .remove-file {
+                color: #ff4444;
+                cursor: pointer;
+                padding: 4px 8px;
+            }
+
+            /* Duty lookup styles */
+            .lookup-result {
+                background-color: #1e1e1e;
+                border: 1px solid #424242;
+                border-radius: 5px;
+                margin-top: 10px;
+                overflow: hidden;
+            }
+
+            .lookup-version-select {
+                background-color: #242424;
+                padding: 12px;
+                border-bottom: 1px solid #424242;
+            }
+
+            .version-option {
+                display: flex;
+                align-items: center;
+                padding: 8px;
+                margin: 4px 0;
+                cursor: pointer;
+                border-radius: 4px;
+                transition: background-color 0.2s;
+            }
+
+            .version-option:hover {
+                background-color: #333;
+            }
+
+            .version-option.selected {
+                background-color: rgba(30, 136, 229, 0.2);
+            }
+
+            .version-date {
+                font-size: 12px;
+                color: #888;
+                margin-left: auto;
+            }
+
+            .lookup-header {
+                background-color: #1e88e5;
+                color: white;
+                padding: 12px;
+                font-size: 18px;
+                font-weight: bold;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .lookup-header-details {
+                font-size: 14px;
+                font-weight: normal;
+            }
+
+            .lookup-body {
+                padding: 16px;
+            }
+
+            .lookup-section {
+                margin-bottom: 20px;
+            }
+
+            .section-header {
+                font-size: 16px;
+                color: #1e88e5;
+                margin-bottom: 8px;
+                padding-bottom: 4px;
+                border-bottom: 1px solid #424242;
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .section-time {
+                color: #888;
+                font-size: 14px;
+            }
+
+            .section-content {
+                margin-left: 16px;
+            }
+
+            .section-item {
+                margin-bottom: 4px;
+                display: flex;
+                gap: 8px;
+            }
+
+            .section-label {
+                color: #888;
+                min-width: 80px;
+            }
+
+            .section-spare {
+                font-style: italic;
+                color: #888;
+                margin-left: 16px;
+            }
+
+			.lookup-actions {
+				padding: 12px;
+				text-align: right;
+				border-top: 1px solid #424242;
+				display: flex;
+				align-items: center;
+				justify-content: flex-end;
+				gap: 12px;
+			}
+
+			.inline-feedback {
+				color: #4caf50;  /* Green color for success */
+				font-size: 14px;
+				opacity: 1;
+				transition: opacity 0.3s ease-in-out;
+			}
+
+			@keyframes fadeIn {
+				from { opacity: 0; }
+				to { opacity: 1; }
+			}
+
+			.inline-feedback {
+				animation: fadeIn 0.2s ease-in-out;
+			}
+			
+            .duty-number-lookup { 
+                width: 246px;
+                background-color: #1e1e1e;
+                color: #ffffff;
+                border: 1px solid #424242;
+                border-radius: 5px;
+                height: 36px;
+                box-sizing: border-box;
+            }
+
+            .duty-rows {
+                margin-bottom: 16px;
+            }
+
+            .duty-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 16px;
+                position: relative;
+            }
+
+            .duty-type {
+                width: 60px;
+                text-transform: uppercase;
+            }
+			
+			.duty-type.recognized {
+				background-color: #1e88e5;
+				color: white;
+			}			
+
+            .duty-number {
+                width: 60px;
+            }
+
+            .duty-date {
+                width: 120px;
+            }
+
+            .duty-info {
+                color: #666;
+				max-width: 80px;
+                font-size: 12px;
+                margin-right: 24px;
+                white-space: nowrap;
+                order: -1;
+                cursor: pointer;
+            }
+
+            .remove-row {
+                background: none;
+                border: none;
+                color: #ff4444;
+                cursor: pointer;
+                font-size: 22px;
+                padding: 0;
+                width: 24px;
+                height: 36px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                margin-left: 4px;
+            }
+
+            .button-group {
+                display: flex;
+                gap: 12px;
+                margin-top: 16px;
+            }
+
+            #output {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                background-color: #1e1e1e;
+                padding: 10px;
+                border-radius: 5px;
+                margin-top: 10px;
+                font-family: monospace;
+                font-size: 14px;
+            }
+
+			@media (max-width: 600px) {
+				body {
+					padding: 8px;
+				}
+
+				.container {
+					width: 100%;
+					padding: 0;
+				}
+
+				h1 {
+					font-size: 20px;
+				}
+
+				h2 {
+					font-size: 18px;
+				}
+
+				.duty-row {
+					display: flex;
+					align-items: center;
+					flex-wrap: nowrap;
+					position: relative;
+					gap: 4px;
+					margin-bottom: 8px;
+				}
+
+				.duty-info {
+					position: absolute;
+					left: 245px; /* Adjust this value to match the input widths */
+					width: auto;
+					text-align: right;
+					font-size: 12px;
+					padding: 0;
+					margin: 0;
+					order: -1;
+					cursor: pointer;
+				}
+
+				.duty-type, .duty-number {
+					width: 55px;
+				}
+
+				.duty-date {
+					max-width: 125px;
+				}
+
+				.duty-row:has(.duty-info) .duty-date {
+					flex: none;
+				}
+
+				#manualDutyNumber {
+					width: 170px;
+				}
+
+				.lookup-button {
+					flex: 1;
+				}
+
+				.button-group {
+					flex-direction: column;
+				}
+
+				button {
+					width: 100%;
+				}
+
+				.section-item {
+					flex-direction: column;
+					gap: 2px;
+				}
+
+				.section-label {
+					min-width: auto;
+				}
+
+				.duty-number-lookup {
+					width: 246px;
+					background-color: #1e1e1e;
+					color: #ffffff;
+					border: 1px solid #424242;
+					border-radius: 5px;
+					height: 36px;
+					box-sizing: border-box;
+				}
+				
+				.remove-row {
+					position: absolute;
+					right: 0px;
+					top: 40%; 
+					transform: translateY(-50%);
+					font-size: 38px;
+					width: 32px;
+					height: 32px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					background-color: transparent;
+					color: #ff4444;
+					border: none;
+					cursor: pointer;
+					z-index: 1;
+					pointer-events: auto;
+				}
+			}
+        </style>
+    </head>
+    <body>
+        <!-- Splash Screen -->
+        <div class="splash-screen" id="splashScreen">
+            <div class="splash-content">
+                <h1 class="splash-title">Welcome to OwnGOAL!</h1>
+                <p>Please upload your duty data file(s) to continue</p>
+                <div class="file-upload-area" id="dropZone">
+                    <p>Drop files here or click to upload</p>
+                    <p style="color: #666; font-size: 12px;">Accepts .json files</p>
+                    <input type="file" id="fileInput" multiple accept=".json">
+                </div>
+                <div class="uploaded-files" id="uploadedFiles"></div>
+                <button id="continueButton" onclick="continueToDutyTool()" style="display: none;">
+                    Continue to OwnGOAL
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container" id="mainContent" style="display: none;">
+			<h1>OwnGOAL</h1>	
+					
+            <div id="mainTabs">
+                <div>
+					<h2 style="display: none;">HTML Paste Method</h2> <!-- remove style="display: none;" to restore -->
+					<textarea id="dutyHtml" rows="10" placeholder="Paste duty HTML here" style="display: none;"></textarea> <!-- remove style="display: none;" to restore -->
+					<button onclick="processDuties()" style="display: none;">Submit</button> <!-- remove style="display: none;" to restore -->
+										
+                    <h2 style="margin-top: 80px;">Manual Duty Lookup</h2>
+					<div class="duty-row" style="display: flex; align-items: center; gap: 10px;">
+						<input type="text" id="manualDutyNumber" placeholder="Enter duty number here" 
+							   class="duty-number-lookup" oninput="lookupDuty()">
+						<button id="backToVersionsBtn" onclick="restoreDutyList()" 
+								style="display: none; padding: 5px 12px;">Back to Versions</button>
+					</div>
+                    <div id="manualLookupResult"></div>
+
+                    <h2 style="margin-top: 40px;">Calendar File Builder</h2>
+                    <div id="icsBuilderRows" class="duty-rows">
+                        <div class="duty-row">
+                            <input type="text" class="duty-type" placeholder="Type">
+                            <input type="text" class="duty-number" placeholder="Duty">
+                            <input type="date" class="duty-date">
+                            <span class="remove-row" onclick="removeFirstRow(this)" style="visibility: hidden">×</span>
+                        </div>
+                    </div>
+					<div class="button-group">
+                        <button onclick="addDutyRow()">Add Row</button>
+                        <button onclick="generateICS()">Generate ICS</button>
+                    </div>
+                    
+                    <pre id="output"></pre>
+                    
+						<a href="#" onclick="returnToSplash(); return false;" style="display: block; margin-top: 40px;">Return to File Upload</a>
+						<div id="aboutSection" style="margin-top: 20px;">
+                        <a href="#" id="aboutLink" onclick="toggleAboutSection(); return false;">About this tool</a>
+						<div id="aboutText" style="display: none;">
+							Created by Omari A.<br><br>
+							This tool (currently in beta) is designed to extract duty information from 
+							<span style="background-color: #333; padding: 3px 6px; border-radius: 4px; font-family: monospace; color: #ffffff;">.JSON</span> 
+							files that I create.<br><br>
+
+							It allows for quick duty lookups and the generation of 
+							<span style="background-color: #333; padding: 3px 6px; border-radius: 4px; font-family: monospace; color: #ffffff;">.ICS</span> 
+							files, which can be imported into an Outlook calendar. Please note that there may be unknown issues, and 
+							<b>no liability is taken for any incorrect information displayed or generated.</b><br><br>
+
+							This tool utilizes two types of 
+							<span style="background-color: #333; padding: 3px 6px; border-radius: 4px; font-family: monospace; color: #ffffff;">.JSON</span> files:<br><br>
+
+							<b style="color: var(--base-color);">Base files</b>: Contain the core Monday-to-Sunday duties corresponding to the current DLR timetable.<br><br>
+							<b style="color: var(--temp-color);">Temp files</b>: Contain duties in effect during periods of modified working (e.g., weekend engineering works).
+						</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Duty data structure
+            let dutyData = {
+                base: {},        // Base duties keyed by baseDate
+                singleTemp: {},  // Single day temp duties keyed by date
+                rangeTemp: []    // Array of {startDate, endDate, duties} objects
+            };
+
+            // Day name lookups
+            const dayNames = {
+                "O": "Rest day",
+				"RD": "Rest day",
+                "AL": "Annual leave",
+                "OAL": "Owed annual leave",
+                "MRD": "Rest day (manual)",
+                "LD": "Lieu day",
+                "BH": "Bank holiday",
+                "T": "Training day",
+                "SB": "Standby",
+                "IT": "Training",
+                "TR": "Training"
+            };
+			
+			const catTypes = {
+				"AL": "#415F16",
+				"BH": "#2D1A13",
+				"E": "#046986",
+				"EE": "#046986",
+				"EM": "#043B3B",
+				"M": "#043B3B",
+				"ML": "#043B3B",
+				"L": "#03213A",
+				"LL": "#03213A",
+				"IT": "#7F235E",
+				"O": "#0D5B0B",
+				"RD": "#0D5B0B",
+				"MRD": "#0D5B0B",
+				"LD": "#5E2708",
+				"OAL": "#426017",
+				"OT": "#6E0C15",
+				"T": "#7F235E"
+			};		
+			
+            const locationAddresses = {
+                "BBO": "Beckton DLR Depot",
+                "HIL": "Poplar DLR Depot",
+                "BEDP": "Beckton DLR Depot"
+            };
+
+            // Enhanced drag and drop handling
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            dropZone.addEventListener('drop', handleDrop, false);
+            fileInput.addEventListener('change', handleFileSelect, false);
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function highlight(e) {
+                dropZone.classList.add('drag-over');
+            }
+
+            function unhighlight(e) {
+                dropZone.classList.remove('drag-over');
+            }
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+
+            function handleFileSelect(e) {
+                const files = e.target.files;
+                handleFiles(files);
+            }
+
+            function handleFiles(files) {
+                Array.from(files).forEach(processFile);
+            }
+
+            function processFile(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        const jsonMatch = content.match(/var\s+ExtractedDuties\s*=\s*(\{.*\});/s);
+                        if (jsonMatch) {
+                            const duties = JSON.parse(jsonMatch[1]);
+                            processDutyFile(file.name, duties);
+                            addFileToList(file.name);
+                            document.getElementById('continueButton').style.display = 'block';
+                        }
+                    } catch (error) {
+                        console.error('Error processing file:', error);
+                        showError(`Error processing ${file.name}: ${error.message}`);
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            function processDutyFile(filename, duties) {
+                const parts = filename.split('.')[0].split('-');
+                
+                if (filename.includes('-to-')) {
+                    // Range temp file
+                    const [startYear, startMonth, startDay, , endYear, endMonth, endDay] = parts;
+                    const startDate = new Date(startYear, startMonth - 1, startDay);
+                    const endDate = new Date(endYear, endMonth - 1, endDay);
+                    dutyData.rangeTemp.push({
+                        startDate,
+                        endDate,
+                        duties,
+                        filename
+                    });
+                } else if (filename.endsWith('-Base.json')) {
+                    // Base file
+                    const [year, month, day] = parts;
+                    const baseDate = new Date(year, month - 1, day);
+                    dutyData.base[baseDate.getTime()] = {
+                        duties,
+                        filename
+                    };
+                } else if (filename.endsWith('-Temp.json')) {
+                    // Single day temp file
+                    const [year, month, day] = parts;
+                    const dateKey = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                    dutyData.singleTemp[dateKey] = {
+                        duties,
+                        filename
+                    };
+                }
+            }
+
+            function addFileToList(filename) {
+                const uploadedFilesDiv = document.getElementById('uploadedFiles');
+                const fileDiv = document.createElement('div');
+                fileDiv.className = 'file-item';
+                
+                let typeIndicator = '';
+                if (filename.endsWith('-Base.json')) {
+                    typeIndicator = '<span class="file-type-indicator file-type-base">Base</span>';
+                } else if (filename.endsWith('-Temp.json') || filename.includes('-to-')) {
+                    typeIndicator = '<span class="file-type-indicator file-type-temp">Temp</span>';
+                }
+
+                fileDiv.innerHTML = `
+                    ${typeIndicator}
+                    <span>${filename}</span>
+                    <span class="remove-file" onclick="removeFile('${filename}')">×</span>
+                `;
+                uploadedFilesDiv.appendChild(fileDiv);
+            }
+
+            function removeFile(filename) {
+                // Remove file from data structures
+                if (filename.endsWith('-Base.json')) {
+                    const [year, month, day] = filename.split('.')[0].split('-');
+                    const baseDate = new Date(year, month - 1, day).getTime();
+                    delete dutyData.base[baseDate];
+                } else if (filename.endsWith('-Temp.json')) {
+                    const [year, month, day] = filename.split('.')[0].split('-');
+                    const dateKey = `${year}-${month}-${day}`;
+                    delete dutyData.singleTemp[dateKey];
+                } else if (filename.includes('-to-')) {
+                    dutyData.rangeTemp = dutyData.rangeTemp.filter(range => range.filename !== filename);
+                }
+
+                // Remove from UI
+                const fileElements = document.querySelectorAll('.file-item');
+                fileElements.forEach(el => {
+                    if (el.children[1].textContent === filename) {
+                        el.remove();
+                    }
+                });
+
+                // Hide continue button if no files remain
+                if (document.querySelectorAll('.file-item').length === 0) {
+                    document.getElementById('continueButton').style.display = 'none';
+                }
+            }
+
+            function showError(message) {
+                const feedback = document.createElement('div');
+                feedback.className = 'copy-feedback';
+                feedback.style.backgroundColor = '#c62828';
+                feedback.textContent = message;
+                document.body.appendChild(feedback);
+                setTimeout(() => feedback.remove(), 1500);
+            }
+
+            function continueToDutyTool() {
+                if (Object.keys(dutyData.base).length === 0 && 
+                    Object.keys(dutyData.singleTemp).length === 0 && 
+                    dutyData.rangeTemp.length === 0) {
+                    alert('Please upload at least one duty data file to continue.');
+                    return;
+                }
+                document.getElementById('splashScreen').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+            }
+
+			function returnToSplash() {
+				const splashScreen = document.getElementById('splashScreen');
+				const mainContent = document.getElementById('mainContent');
+				
+				splashScreen.style.display = 'flex';  // Use flex instead of block
+				mainContent.style.display = 'none';
+			}
+
+            // Function to get duty info for a specific date and duty number
+            function getDutyForDate(dutyNumber, dateStr) {
+                const versions = [];
+                const [year, month, day] = dateStr.split('-');
+                const date = new Date(year, month - 1, day);
+
+                // Check single day temp
+                const dateKey = `${year}-${month}-${day}`;
+                if (dutyData.singleTemp[dateKey]) {
+                    const tempDuty = Object.entries(dutyData.singleTemp[dateKey].duties)
+                        .find(([key]) => key.startsWith(dutyNumber + '-'));
+                    if (tempDuty) {
+                        versions.push({
+                            type: 'temp',
+                            date: dateStr,
+                            duty: tempDuty[1],
+                            dutyId: tempDuty[0],
+                            filename: dutyData.singleTemp[dateKey].filename
+                        });
+                    }
+                }
+
+                // Check range temp
+                const rangeTempMatch = dutyData.rangeTemp.find(range => 
+                    date >= range.startDate && date <= range.endDate);
+                if (rangeTempMatch) {
+                    const tempDuty = Object.entries(rangeTempMatch.duties)
+                        .find(([key]) => key.startsWith(dutyNumber + '-'));
+                    if (tempDuty) {
+                        versions.push({
+                            type: 'temp',
+                            dateRange: {
+                                start: rangeTempMatch.startDate.toISOString().split('T')[0],
+                                end: rangeTempMatch.endDate.toISOString().split('T')[0]
+                            },
+                            duty: tempDuty[1],
+                            dutyId: tempDuty[0],
+                            filename: rangeTempMatch.filename
+                        });
+                    }
+                }
+
+                // Check base duties
+                const baseDate = Object.keys(dutyData.base)
+                    .map(Number)
+                    .filter(time => new Date(time) <= date)
+                    .sort((a, b) => b - a)[0];
+
+                if (baseDate) {
+                    const baseDutyId = Object.keys(dutyData.base[baseDate].duties)
+                        .find(key => key.startsWith(dutyNumber + '-'));
+                    if (baseDutyId) {
+                        versions.push({
+                            type: 'base',
+                            date: new Date(baseDate).toISOString().split('T')[0],
+                            duty: dutyData.base[baseDate].duties[baseDutyId],
+                            dutyId: baseDutyId,
+                            filename: dutyData.base[baseDate].filename
+                        });
+                    }
+                }
+
+                return versions;
+            }
+
+			function getAllDutyVersions(dutyNumber) {
+				const versions = [];
+
+				// Search in Base Duties
+				Object.keys(dutyData.base).forEach(baseDateKey => {
+					const baseDutyId = Object.keys(dutyData.base[baseDateKey].duties)
+						.find(key => key.startsWith(dutyNumber + '-'));
+
+					if (baseDutyId) {
+						versions.push({
+							type: 'base',
+							date: new Date(parseInt(baseDateKey)).toISOString().split('T')[0],
+							duty: dutyData.base[baseDateKey].duties[baseDutyId],
+							dutyId: baseDutyId,
+							filename: dutyData.base[baseDateKey].filename
+						});
+					}
+				});
+
+				// Search in Single Temp Duties
+				Object.keys(dutyData.singleTemp).forEach(dateKey => {
+					const tempDuty = Object.entries(dutyData.singleTemp[dateKey].duties)
+						.find(([key]) => key.startsWith(dutyNumber + '-'));
+
+					if (tempDuty) {
+						versions.push({
+							type: 'temp',
+							date: dateKey,
+							duty: tempDuty[1],
+							dutyId: tempDuty[0],
+							filename: dutyData.singleTemp[dateKey].filename
+						});
+					}
+				});
+
+				// Search in Range Temp Duties
+				dutyData.rangeTemp.forEach(range => {
+					const tempDuty = Object.entries(range.duties)
+						.find(([key]) => key.startsWith(dutyNumber + '-'));
+
+					if (tempDuty) {
+						versions.push({
+							type: 'temp',
+							dateRange: {
+								start: range.startDate.toISOString().split('T')[0],
+								end: range.endDate.toISOString().split('T')[0]
+							},
+							duty: tempDuty[1],
+							dutyId: tempDuty[0],
+							filename: range.filename
+						});
+					}
+				});
+
+				return versions;
+			}
+
+            // Duty lookup with version selection
+			function lookupDuty() {
+				const dutyNumber = document.getElementById('manualDutyNumber').value;
+				const resultDiv = document.getElementById('manualLookupResult');
+				const backButton = document.getElementById('backToVersionsBtn');
+				
+				if (!dutyNumber) {
+					resultDiv.innerHTML = '';
+					backButton.style.display = 'none';
+					return;
+				}
+
+				try {
+					const versions = getAllDutyVersions(dutyNumber);
+					
+					if (versions.length === 0) {
+						resultDiv.innerHTML = '<div style="color: #e53935;">Duty not found</div>';
+						backButton.style.display = 'none';
+						return;
+					}
+
+					// Group identical duties to check for true duplicates
+					const groups = groupIdenticalDuties(versions);
+
+					if (groups.length === 1) {
+						// If there's only one unique version (even if multiple identical entries), show it immediately
+						backButton.style.display = 'none';
+						resultDiv.innerHTML = formatDutyDetails(groups[0].versions[0].duty, groups[0].versions[0].dutyId, groups[0].versions[0]);
+					} else {
+						// If multiple different versions exist, show selection
+						backButton.style.display = 'none';
+						resultDiv.innerHTML = formatMultipleVersions(dutyNumber, versions);
+					}
+
+				} catch (error) {
+					console.error('Error in duty lookup:', error);
+					showError('Error looking up duty. Please try again.');
+				}
+			}
+
+			function formatDateDisplay(dateStr) {
+				const [year, month, day] = dateStr.split('-');
+				return `${day}/${month}/${year}`;
+			}
+
+			function areDutiesIdentical(duty1, duty2) {
+				// Helper function to compare two duty objects deeply
+				const keyFields = [
+					'TypeOfDuty', 'Spreadtime', 'PaidTime',
+					'FirstHalfRunNumber', 'FirstHalfStartLocation', 'FirstHalfStartTime',
+					'FirstHalfEndLocation', 'FirstHalfEndTime', 'FirstHalfLength',
+					'SecondHalfRunNumber', 'SecondHalfStartLocation', 'SecondHalfStartTime',
+					'SecondHalfEndLocation', 'SecondHalfEndTime', 'SecondHalfLength',
+					'MealBreakDuration'
+				];
+				
+				return keyFields.every(field => duty1[field] === duty2[field]);
+			}
+
+			function formatAppliesText(versions) {
+				// Sort versions by date
+				const sortedVersions = [...versions].sort((a, b) => {
+					const getDate = (v) => {
+						if (v.type === 'base') return new Date(v.date);
+						if (v.dateRange) return new Date(v.dateRange.start);
+						return new Date(v.date);
+					};
+					return getDate(a) - getDate(b);
+				});
+
+				// Separate base duties and temp duties
+				const baseDuties = sortedVersions.filter(v => v.type === 'base');
+				const tempDuties = sortedVersions.filter(v => v.type === 'temp');
+
+				let parts = [];
+
+				// Handle base duties first, always with "onwards"
+				if (baseDuties.length > 0) {
+					const [year, month, day] = baseDuties[0].date.split('-');
+					return `From <span style="color: var(--base-color)">${day}/${month}/${year}</span> onwards`;
+				}
+
+				// Process temp duties to find sequential dates
+				if (tempDuties.length > 0) {
+					let currentRange = {
+						start: null,
+						end: null
+					};
+
+					tempDuties.forEach((version, index) => {
+						const currentDate = version.dateRange ? new Date(version.dateRange.start) : new Date(version.date);
+						
+						if (!currentRange.start) {
+							currentRange.start = currentDate;
+							currentRange.end = currentDate;
+						} else {
+							const nextDay = new Date(currentRange.end);
+							nextDay.setDate(nextDay.getDate() + 1);
+
+							if (currentDate.getTime() === nextDay.getTime()) {
+								// Sequential date, extend the range
+								currentRange.end = currentDate;
+							} else {
+								// Non-sequential, add the current range and start a new one
+								addRangeToOutput();
+								currentRange = {
+									start: currentDate,
+									end: currentDate
+								};
+							}
+						}
+
+						// Add final range if this is the last version
+						if (index === tempDuties.length - 1) {
+							addRangeToOutput();
+						}
+					});
+
+					function addRangeToOutput() {
+						if (currentRange.start.getTime() === currentRange.end.getTime()) {
+							// Single date
+							const date = currentRange.start;
+							const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+							parts.push(`on <span style="color: var(--temp-color)">${formattedDate}</span>`);
+						} else {
+							// Date range
+							const startDate = currentRange.start;
+							const endDate = currentRange.end;
+							const formattedStartDate = `${startDate.getDate().toString().padStart(2, '0')}/${(startDate.getMonth() + 1).toString().padStart(2, '0')}/${startDate.getFullYear()}`;
+							const formattedEndDate = `${endDate.getDate().toString().padStart(2, '0')}/${(endDate.getMonth() + 1).toString().padStart(2, '0')}/${endDate.getFullYear()}`;
+							parts.push(`from <span style="color: var(--temp-color)">${formattedStartDate}</span> to <span style="color: var(--temp-color)">${formattedEndDate}</span>`);
+						}
+					}
+				}
+
+				// Join all parts
+				if (parts.length === 1) return parts[0];
+				if (parts.length === 2) return `${parts[0]}, and ${parts[1]}`;
+				
+				const lastPart = parts.pop();
+				return `${parts.join(', ')}, and ${lastPart}`;
+			}
+
+			function groupIdenticalDuties(versions) {
+				// Add originalIndex to each version before grouping
+				const versionsWithIndex = versions.map((version, index) => ({
+					...version,
+					originalIndex: index
+				}));
+				
+				const groups = [];
+				
+				versionsWithIndex.forEach(version => {
+					// Try to find an existing group that matches this duty
+					const matchingGroup = groups.find(group => 
+						areDutiesIdentical(group.versions[0].duty, version.duty)
+					);
+					
+					if (matchingGroup) {
+						matchingGroup.versions.push(version);
+					} else {
+						groups.push({ versions: [version] });
+					}
+				});
+				
+				return groups;
+			}
+
+			// Replace the existing formatMultipleVersions function with this one
+			function formatMultipleVersions(dutyNumber, versions) {
+				if (!versions || versions.length === 0) {
+					return '<div style="color: #e53935;">No versions found</div>';
+				}
+
+				let content = `
+					<div class="lookup-result">
+						<div class="lookup-header">
+							Duty ${dutyNumber}: Multiple Versions Found
+						</div>
+						<div class="lookup-version-select">`;
+
+				const groups = groupIdenticalDuties(versions);
+
+				groups.forEach(group => {
+					const firstVersion = group.versions[0];
+					const dutyParts = firstVersion.dutyId.split('-');
+					const location = dutyParts[1] || 'Unknown';
+					const startTime = dutyParts[3] || '??:??';
+					const endTime = dutyParts[4] || '??:??';
+
+					// Determine if group contains any base duties
+					const hasBaseDuty = group.versions.some(v => v.type === 'base');
+					const displayType = hasBaseDuty ? 'Base' : 'Temporary';
+
+					content += `
+						<div class="version-option" onclick="selectMultiVersionDetails(${dutyNumber}, ${firstVersion.originalIndex})" style="
+							padding: 10px; 
+							border: 1px solid #424242; 
+							margin: 8px 0; 
+							border-radius: 5px; 
+							cursor: pointer;
+							background-color: #1e1e1e;
+							display: flex;
+							flex-direction: column;
+							gap: 4px;
+						">
+							<div style="font-weight: bold; font-size: 16px;">${location} ${startTime}-${endTime}</div>
+							<div style="color: #888; font-size: 14px;">Type: ${displayType} duty</div>
+							<div style="color: #666; font-size: 12px; text-align: center;">Applies: ${formatAppliesText(group.versions)}</div>
+						</div>`;
+				});
+
+				content += `
+						</div>
+					</div>`;
+
+				return content;
+			}
+
+			function selectMultiVersionDetails(dutyNumber, versionIndex) {
+				console.log("Called selectMultiVersionDetails with:", dutyNumber, versionIndex);  // Add this line
+				const resultDiv = document.getElementById('manualLookupResult');
+				const backButton = document.getElementById('backToVersionsBtn');
+				const versions = getAllDutyVersions(dutyNumber);
+
+				if (!versions || versions.length === 0 || !versions[versionIndex]) {
+					resultDiv.innerHTML = '<div style="color: #e53935;">Error: Duty version not found</div>';
+					return;
+				}
+
+				const selectedVersion = versions[versionIndex];
+				backButton.style.display = 'inline-block';  // Show the back button
+				resultDiv.innerHTML = formatDutyDetails(
+					selectedVersion.duty, 
+					selectedVersion.dutyId, 
+					selectedVersion
+				);
+			}
+
+			function formatDutyDetails(duty, dutyId, versionInfo) {
+				const [number, location, endLocation, startTime, endTime] = dutyId.split('-');
+
+				let backButtonHtml = '';
+
+				let content = `
+					<div class="lookup-result">
+						${backButtonHtml}
+						<div class="lookup-header">
+							<div>Duty ${number}: ${location} ${startTime}-${endTime}</div>
+							<div class="lookup-header-details">
+								Type: ${duty.TypeOfDuty} | Spread: ${duty.Spreadtime} | Paid: ${duty.PaidTime}
+							</div>
+						</div>
+						<div class="lookup-body">
+							<div class="lookup-section">
+								<div class="section-item">
+									<span class="section-label">Book on:</span>
+									<span>${startTime} at ${location}</span>
+								</div>
+							</div>
+				`;
+
+				if (duty.TypeOfDuty === "SPARE" || duty.TypeOfDuty === "TRAINING" || duty.TypeOfDuty === "PANEL") {
+					content += `
+						<div class="lookup-section">
+							<div class="section-header">Duty Details</div>
+							<div class="section-spare">${duty.TypeOfDuty}</div>
+						</div>`;
+				} else {
+					// First Half
+					content += `
+						<div class="lookup-section">
+							<div class="section-header">
+								<span>First Half</span>
+								<span class="section-time">${duty.FirstHalfLength}</span>
+							</div>`;
+
+					if (duty.FirstHalfRunNumber === "" || duty.FirstHalfRunNumber === "TR") {
+						content += `<div class="section-spare">${duty.TypeOfDuty}</div>`;
+					} else {
+						content += `
+							<div class="section-content">
+								<div class="section-item">
+									<span class="section-label">Run:</span>
+									<span>R${duty.FirstHalfRunNumber}</span>
+								</div>
+								<div class="section-item">
+									<span class="section-label">Pick up:</span>
+									<span>${duty.FirstHalfStartLocation} at ${duty.FirstHalfStartTime}</span>
+								</div>
+								<div class="section-item">
+									<span class="section-label">Relieved:</span>
+									<span>${duty.FirstHalfEndLocation} at ${duty.FirstHalfEndTime}</span>
+								</div>
+							</div>`;
+					}
+					content += `</div>`;
+
+					// Break Details (between halves)
+					if (duty.FirstHalfEndTime && duty.SecondHalfStartTime) {
+						content += `
+							<div class="lookup-section">
+								<div class="section-header">Break Details</div>
+								<div class="section-content">
+									<div class="section-item">
+										<span class="section-label">Duration:</span>
+										<span>${calculateBreakDetails(duty)}</span>
+									</div>
+								</div>
+							</div>`;
+					}
+
+					// Second Half
+					content += `
+						<div class="lookup-section">
+							<div class="section-header">
+								<span>Second Half</span>
+								<span class="section-time">${duty.SecondHalfLength}</span>
+							</div>`;
+
+					if (duty.SecondHalfRunNumber === "" || duty.SecondHalfRunNumber === "TR") {
+						content += `<div class="section-spare">${duty.TypeOfDuty}</div>`;
+					} else {
+						content += `
+							<div class="section-content">
+								<div class="section-item">
+									<span class="section-label">Run:</span>
+									<span>R${duty.SecondHalfRunNumber}</span>
+								</div>
+								<div class="section-item">
+									<span class="section-label">Pick up:</span>
+									<span>${duty.SecondHalfStartLocation} at ${duty.SecondHalfStartTime}</span>
+								</div>
+								<div class="section-item">
+									<span class="section-label">Relieved:</span>
+									<span>${duty.SecondHalfEndLocation} at ${duty.SecondHalfEndTime}</span>
+								</div>
+							</div>`;
+					}
+					content += `</div>`;
+				}
+
+				content += `
+					<div class="lookup-section">
+						<div class="section-item">
+							<span class="section-label">Book off:</span>
+							<span>${endTime} at ${endLocation}</span>
+						</div>
+					</div>`;
+
+				// Copy button (Moved above Version Info)
+				content += `
+					<div class="lookup-actions">
+						<button onclick="copyDutyDetails('${dutyId}')">Copy to Clipboard</button>
+					</div>`;
+
+				// Only show "Version Info" if there was more than one version initially
+				const allVersions = getAllDutyVersions(dutyId.split('-')[0]);
+				const groupedVersions = groupIdenticalDuties(allVersions);
+
+				if (groupedVersions.length > 1) { 
+					content += `
+						<div class="lookup-section">
+							<div class="section-header">Version Info</div>
+							<div class="section-content">
+								<div class="section-item">
+									<span class="section-label">Type:</span>
+									<span>${versionInfo.type === 'base' ? 'Base' : 'Temporary'}</span>
+								</div>
+								<div class="section-item">
+									<span class="section-label">Applies:</span>
+									<span>${formatAppliesText([versionInfo])}</span>
+								</div>
+							</div>
+						</div>`;
+				}
+
+				return content;
+			}
+
+
+			function restoreDutyList(dutyNumber) {
+				if (!dutyNumber) {
+					dutyNumber = document.getElementById('manualDutyNumber').value;
+				}
+				const resultDiv = document.getElementById('manualLookupResult');
+				const backButton = document.getElementById('backToVersionsBtn');
+
+				if (!dutyNumber) {
+					resultDiv.innerHTML = '';
+					backButton.style.display = 'none';
+					return;
+				}
+
+				backButton.style.display = 'none';  // Hide the back button
+				const versions = getAllDutyVersions(dutyNumber);
+				resultDiv.innerHTML = formatMultipleVersions(dutyNumber, versions);
+			}
+
+            function calculateBreakDetails(duty) {
+                if (!duty.FirstHalfEndTime || !duty.SecondHalfStartTime) return "N/A";
+
+                const [breakHours, breakMins] = calculateTimeDifference(
+                    duty.FirstHalfEndTime,
+                    duty.SecondHalfStartTime
+                ).split(':').map(Number);
+
+                const [mealHours, mealMins] = duty.MealBreakDuration.split(':').map(Number);
+                
+                const totalBreakMins = (breakHours * 60 + breakMins);
+                const mealBreakMins = (mealHours * 60 + mealMins);
+                const paidBreakMins = totalBreakMins - mealBreakMins;
+                
+                const paidHours = Math.floor(paidBreakMins / 60);
+                const paidMins = paidBreakMins % 60;
+                const paidBreak = `${paidHours.toString().padStart(2, '0')}:${paidMins.toString().padStart(2, '0')}`;
+
+                return `${formatTime(breakHours, breakMins)} (${duty.MealBreakDuration} unpaid + ${paidBreak} paid)`;
+            }
+
+			function copyDutyDetails(dutyId) {
+				const parts = dutyId.split('-');
+				const location = parts[1];
+				const startTime = parts[3];
+				const endTime = parts[4];
+				const dutyNumber = parts[0];
+
+				// Fetch the duty version
+				const versions = getAllDutyVersions(dutyNumber);
+				const selectedVersion = versions.find(v => v.dutyId === dutyId);
+
+				if (!selectedVersion) {
+					alert('Duty version not found');
+					return;
+				}
+
+				// Create a fake duty object to generate the ICS description
+				const fakeEvent = selectedVersion.duty;
+
+				// Generate the description directly using the existing ICS generation function
+				const description = generateEventDescription(fakeEvent, startTime, endTime, location)
+					.replace(/\\n/g, '\n')
+					.replace(/\\t/g, '\t');
+
+				// Copy to clipboard
+				const textArea = document.createElement("textarea");
+				textArea.value = description;
+				textArea.style.position = "fixed";
+				textArea.style.left = "-999999px";
+				textArea.style.top = "-999999px";
+				document.body.appendChild(textArea);
+				textArea.focus();
+				textArea.select();
+				
+				try {
+					const successful = document.execCommand('copy');
+				} catch (err) {
+					console.error('Fallback copy error', err);
+					alert('Unable to copy');
+				}
+				
+				document.body.removeChild(textArea);
+			}
+			
+			function fallbackCopy(text, actionsDiv) {
+				const textarea = document.createElement('textarea');
+				textarea.value = text;
+				textarea.style.position = 'fixed';
+				textarea.style.opacity = '0';
+				document.body.appendChild(textarea);
+				textarea.select();
+				try {
+					document.execCommand('copy');
+					showInlineFeedback(actionsDiv, 'Copied!');
+				} catch (err) {
+					console.error('Failed to copy text:', err);
+					showInlineFeedback(actionsDiv, 'Failed to copy', true);
+				}
+				document.body.removeChild(textarea);
+			}
+
+			function showInlineFeedback(parentElement, message, isError = false) {
+				// Remove any existing feedback
+				const existingFeedback = parentElement.querySelector('.inline-feedback');
+				if (existingFeedback) {
+					existingFeedback.remove();
+				}
+
+				// Create feedback element
+				const feedback = document.createElement('span');
+				feedback.className = 'inline-feedback';
+				feedback.textContent = message;
+				if (isError) {
+					feedback.style.color = '#e53935'; // Red for errors
+				}
+
+				// Insert after the button
+				parentElement.appendChild(feedback);
+
+				// Remove after 2 seconds
+				setTimeout(() => {
+					if (feedback.parentElement) {
+						feedback.remove();
+					}
+				}, 2000);
+			}
+
+            function formatTime(hours, minutes) {
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            }
+
+			function addDutyRow() {
+				const container = document.getElementById('icsBuilderRows');
+				const rows = container.getElementsByClassName('duty-row');
+				const lastRow = rows[rows.length - 1];
+				
+				const newRow = document.createElement('div');
+				newRow.className = 'duty-row';
+				
+				const dutyTypeInput = document.createElement('input');
+				dutyTypeInput.type = 'text';
+				dutyTypeInput.className = 'duty-type';
+				dutyTypeInput.placeholder = 'Type';
+
+				// Copy duty type from previous row
+				const lastTypeInput = lastRow.querySelector('.duty-type');
+				if (lastTypeInput && lastTypeInput.value) {
+					dutyTypeInput.value = lastTypeInput.value;
+					// Also copy the background color
+					const color = lastTypeInput.style.backgroundColor;
+					if (color) {
+						dutyTypeInput.style.backgroundColor = color;
+						dutyTypeInput.style.color = 'white';
+					}
+				}
+
+				// Force input to uppercase and handle color
+				dutyTypeInput.addEventListener('input', (e) => {
+					const value = e.target.value.toUpperCase();
+					e.target.value = value;
+					
+					// Check if the type is recognized and get its color
+					const color = catTypes[value];
+					if (color) {
+						e.target.style.backgroundColor = color;
+						e.target.style.color = 'white';
+					} else {
+						e.target.style.backgroundColor = '';
+						e.target.style.color = '';
+					}
+				});
+
+				const dutyNumberInput = document.createElement('input');
+				dutyNumberInput.type = 'text';
+				dutyNumberInput.className = 'duty-number';
+				dutyNumberInput.placeholder = 'Duty';
+				
+				// Copy duty number from previous row and trigger info update
+				const lastDutyNumberInput = lastRow.querySelector('.duty-number');
+				if (lastDutyNumberInput && lastDutyNumberInput.value) {
+					dutyNumberInput.value = lastDutyNumberInput.value;
+					// Trigger duty info update after setting the value
+					setTimeout(() => updateDutyInfo(newRow), 0);
+				}
+				
+				dutyNumberInput.addEventListener('input', () => updateDutyInfo(newRow));
+				
+				const dateInput = document.createElement('input');
+				dateInput.type = 'date';
+				dateInput.className = 'duty-date';
+				
+				// Auto-increment date if previous row has a date
+				const lastDateInput = lastRow.querySelector('.duty-date');
+				if (lastDateInput && lastDateInput.value) {
+					const lastDate = new Date(lastDateInput.value);
+					lastDate.setDate(lastDate.getDate() + 1);
+					dateInput.value = lastDate.toISOString().split('T')[0];
+				}
+
+				// Create remove button
+				const removeBtn = document.createElement('span');
+				removeBtn.className = 'remove-row'; 
+				removeBtn.innerHTML = '×'; 
+				removeBtn.onclick = () => { 
+					container.removeChild(newRow); 
+					
+					// Update remove button visibility
+					const remainingRows = container.getElementsByClassName('duty-row');
+					if (remainingRows.length === 1) {
+						remainingRows[0].querySelector('.remove-row').style.visibility = 'hidden';
+					}
+				}; 
+
+				// Add keyboard handling
+				dutyTypeInput.addEventListener('keypress', (e) => {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						dutyNumberInput.focus();
+					}
+				});
+
+				dutyNumberInput.addEventListener('keypress', (e) => {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						dateInput.focus();
+					}
+				});
+
+				dateInput.addEventListener('keypress', (e) => {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						addDutyRow();
+						const newRows = container.getElementsByClassName('duty-row');
+						newRows[newRows.length - 1]?.querySelector('.duty-type')?.focus();
+					}
+				});
+				
+				// Add click event to clear input when clicked
+				[dutyTypeInput, dutyNumberInput].forEach(input => {
+					input.addEventListener('click', function() {
+						this.value = '';
+						if (this.classList.contains('duty-type')) {
+							this.style.backgroundColor = '';
+							this.style.color = '';
+						}
+					});
+				});
+				
+				newRow.appendChild(dutyTypeInput);
+				newRow.appendChild(dutyNumberInput);
+				newRow.appendChild(dateInput);
+				newRow.appendChild(removeBtn);
+				
+				container.appendChild(newRow);
+
+				// Update remove button visibility for all rows
+				const allRemoveButtons = container.querySelectorAll('.remove-row');
+				if (allRemoveButtons.length > 1) {
+					allRemoveButtons.forEach(btn => {
+						btn.style.visibility = 'visible';
+					});
+				} else {
+					// Ensure only the first row's remove button is always hidden if it's the only row
+					const firstRowRemoveBtn = container.querySelector('.duty-row .remove-row');
+					if (firstRowRemoveBtn) {
+						firstRowRemoveBtn.style.visibility = 'hidden';
+					}
+				}
+			}
+
+			function setupKeyboardHandling() {
+				const rows = document.querySelectorAll('.duty-row');
+				rows.forEach(row => {
+					const typeInput = row.querySelector('.duty-type');
+					const dutyInput = row.querySelector('.duty-number');
+					const dateInput = row.querySelector('.duty-date');
+
+					// Add click event to clear input when clicked
+					[typeInput, dutyInput].forEach(input => {
+						input.addEventListener('click', function() {
+							this.value = '';
+							if (this.classList.contains('duty-type')) {
+								this.style.backgroundColor = '';
+								this.style.color = '';
+							}
+						});
+					});
+
+					typeInput?.addEventListener('keypress', (e) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							dutyInput?.focus();
+						}
+					});
+
+					dutyInput?.addEventListener('keypress', (e) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							dateInput?.focus();
+						}
+					});
+
+					dateInput?.addEventListener('keypress', (e) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							addDutyRow();
+							const newRow = document.querySelector('.duty-row:last-child');
+							newRow?.querySelector('.duty-type')?.focus();
+						}
+					});
+				});
+			}
+
+            function removeFirstRow(btn) {
+                const container = document.getElementById('icsBuilderRows');
+                const rows = container.getElementsByClassName('duty-row');
+                if (rows.length <= 1) return;
+                container.removeChild(rows[0]);
+                if (rows.length === 2) {
+                    rows[0].querySelector('.remove-row').style.visibility = 'hidden';
+                }
+            }
+
+            function updateDutyInfo(row) {
+                const existingInfo = row.querySelector('.duty-info');
+                if (existingInfo) existingInfo.remove();
+
+                const dutyNumber = row.querySelector('.duty-number').value;
+                const dateInput = row.querySelector('.duty-date');
+                if (!dutyNumber || !dateInput.value) return;
+
+                const versions = getDutyForDate(dutyNumber, dateInput.value);
+                if (versions.length > 0) {
+                    const dutyId = versions[0].dutyId;
+                    const parts = dutyId.split('-');
+					const infoSpan = document.createElement('span');
+					infoSpan.className = 'duty-info';
+					infoSpan.style.color = `var(--${versions[0].type}-color)`;
+					infoSpan.textContent = `${parts[1]} ${parts[3]}-${parts[4]}`;
+					infoSpan.onclick = () => {
+						const resultDiv = document.getElementById('manualLookupResult');
+						const backButton = document.getElementById('backToVersionsBtn');
+						document.getElementById('manualDutyNumber').value = dutyNumber;
+						backButton.style.display = 'inline-block';
+						resultDiv.innerHTML = formatDutyDetails(versions[0].duty, versions[0].dutyId, versions[0]);
+						document.getElementById('manualDutyNumber').scrollIntoView({ behavior: 'smooth' });
+					};
+                    row.appendChild(infoSpan);
+                }
+            }
+
+            function generateICS() {
+                const rows = document.getElementsByClassName('duty-row');
+                const date = new Date();
+                const generatedDate = date.toLocaleDateString().split("/").reverse().join("");
+                
+                let icsContent = `BEGIN:VCALENDAR
+CALSCALE:GREGORIAN
+X-LOTUS-CHARSET:UTF-8
+METHOD:PUBLISH
+PRODID:-//DLR duties//EN
+VERSION:2.0
+`;
+
+                for (let row of rows) {
+                    const dutyNumber = row.querySelector('.duty-number')?.value;
+                    const dutyType = row.querySelector('.duty-type')?.value?.toUpperCase() || '';
+                    const dateStr = row.querySelector('.duty-date')?.value;
+                    
+                    if (!dateStr) continue;
+
+                    if (dutyType === "SPARE" || dutyType === "TRAINING" || dutyType === "PANEL" || dayNames[dutyType]) {
+                        icsContent += generateSpecialDutyEvent({
+                            date: dateStr,
+                            dutyType: dutyType,
+                            dutyNumber: dutyNumber
+                        });
+                        continue;
+                    }
+
+                    if (!dutyNumber) continue;
+
+                    // Get appropriate duty version for the date
+                    const versions = getDutyForDate(dutyNumber, dateStr);
+                    if (versions.length > 0) {
+                        const duty = versions[0].duty; // Use first version (temp takes precedence)
+                        const dutyId = versions[0].dutyId;
+                        const [, location, , startTime, endTime] = dutyId.split('-');
+                        
+                        icsContent += generateDutyEvent({
+                            date: dateStr,
+                            dutyNumber: dutyNumber,
+                            dutyType: dutyType || duty.TypeOfDuty,
+                            startTime: startTime,
+                            endTime: endTime,
+                            location: location,
+                            duty: duty
+                        });
+                    }
+                }
+                
+                icsContent += 'END:VCALENDAR';
+                
+                document.getElementById('output').textContent = icsContent;
+                
+                const blob = new Blob([icsContent], {type: 'text/calendar'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `dlr-duties-${generatedDate}.ics`;
+                link.click();
+            }
+
+            function generateDutyEvent(params) {
+                const { date, dutyNumber, dutyType, startTime, endTime, location, duty } = params;
+                const dateStr = formatDateForICS(date);
+                const uid = `dlr-${dateStr}-${generateId(5)}`;
+                
+                // Calculate event end date/time
+                const { finishDate, finishTime } = calculateEventEnd(date, endTime);
+                
+                // Generate description
+                const description = generateEventDescription(duty, startTime, endTime, location);
+                
+                // Format location text
+                const locationText = locationAddresses[location] || `On ${location} Off ${location}`;
+                
+                // Create event
+                return `BEGIN:VEVENT
+UID:${uid}
+SUMMARY:${dutyType} ${dutyNumber} ${location} ${startTime.replace(':', '')}-${endTime.replace(':', '')}
+LOCATION:${locationText}
+DTSTART;TZID=Europe/London:${dateStr}T${startTime.replace(':', '')}00
+DTEND;TZID=Europe/London:${finishDate}T${finishTime.replace(':', '')}00
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+CATEGORIES:${dutyType}
+PRIORITY:0
+STATUS:CONFIRMED
+DESCRIPTION:${description}
+END:VEVENT
+`;
+            }
+
+            function generateSpecialDutyEvent(params) {
+                const { date, dutyType, dutyNumber } = params;
+                const dateStr = formatDateForICS(date);
+                const uid = `dlr-${dateStr}-${generateId(5)}`;
+
+                // For special duties, end date is next day
+                const nextDay = new Date(date);
+                nextDay.setDate(nextDay.getDate() + 1);
+                const endDate = formatDateForICS(nextDay.toISOString().split('T')[0]);
+
+                const eventTitle = dutyNumber ? 
+                    `${dutyType} ${dutyNumber}` : 
+                    (dayNames[dutyType] || dutyType);
+
+                return `BEGIN:VEVENT
+UID:${uid}
+SUMMARY:${eventTitle}
+DTSTART;VALUE=DATE:${dateStr}
+DTEND;VALUE=DATE:${endDate}
+X-MICROSOFT-CDO-BUSYSTATUS:${['T', 'SB', 'TRAINING'].includes(dutyType) ? 'BUSY' : 'FREE'}
+X-MICROSOFT-CDO-ALLDAYEVENT:TRUE
+CATEGORIES:${dutyType}
+PRIORITY:0
+STATUS:CONFIRMED
+END:VEVENT
+`;
+            }
+
+            function generateEventDescription(duty, startTime, endTime, location) {
+                let desc = `Book on at ${startTime} ${location}.\\n\\n`;
+
+                if (duty.TypeOfDuty === "SPARE" || duty.TypeOfDuty === "TRAINING" || duty.TypeOfDuty === "PANEL") {
+                    desc += `${duty.TypeOfDuty}\\n`;
+                } else {
+                    // First Half
+                    desc += `First Half (${duty.FirstHalfLength}):\\n`;
+                    if (duty.FirstHalfRunNumber && duty.FirstHalfRunNumber !== "TR") {
+                        desc += `R${duty.FirstHalfRunNumber} ${duty.FirstHalfStartLocation} ${duty.FirstHalfStartTime} ${duty.FirstHalfEndTime} ${duty.FirstHalfEndLocation}\\n\\n`;
+                    }
+
+                    // Break Details
+                    if (duty.FirstHalfEndTime && duty.SecondHalfStartTime) {
+                        desc += `Break: ${calculateBreakDetails(duty)}\\n\\n`;
+                    }
+
+                    // Second Half
+                    desc += `Second Half (${duty.SecondHalfLength}):\\n`;
+                    if (duty.SecondHalfRunNumber && duty.SecondHalfRunNumber !== "TR") {
+                        desc += `R${duty.SecondHalfRunNumber} ${duty.SecondHalfStartLocation} ${duty.SecondHalfStartTime} ${duty.SecondHalfEndTime} ${duty.SecondHalfEndLocation}\\n`;
+                    }
+                }
+
+                desc += `\\nBook off at ${endTime} ${location}\\n`;
+                desc += `Spread time: ${duty.Spreadtime}\\nPaid time: ${duty.PaidTime}`;
+
+                return desc;
+            }
+
+			function calculateEventEnd(date, endTime) {
+				const [hours] = endTime.split(':').map(Number);
+				let finishDate = formatDateForICS(date);
+				let finishTime = endTime;
+
+				// Handle times after midnight
+				if (hours >= 24) {
+					const nextDay = new Date(date);
+					nextDay.setDate(nextDay.getDate() + 1);
+					finishDate = formatDateForICS(nextDay.toISOString().split('T')[0]);
+					finishTime = '23:59';
+				}
+
+				return { finishDate, finishTime };
+			}
+
+            function formatDateForICS(dateStr) {
+                if (!dateStr) return '';
+                const [year, month, day] = dateStr.split('-');
+                return `${year}${month}${day}`;
+            }
+
+            function calculateTimeDifference(time1, time2) {
+                const [h1, m1] = time1.split(':').map(Number);
+                const [h2, m2] = time2.split(':').map(Number);
+                
+                let diffMinutes = (h2 * 60 + m2) - (h1 * 60 + m1);
+                if (diffMinutes < 0) diffMinutes += 24 * 60;
+                
+                const hours = Math.floor(diffMinutes / 60);
+                const minutes = diffMinutes % 60;
+                return formatTime(hours, minutes);
+            }
+
+            function generateId(len) {
+                const chars = 'abcdef0123456789';
+                let result = '';
+                for (let i = 0; i < len; i++) {
+                    result += chars[Math.floor(Math.random() * chars.length)];
+                }
+                return result;
+            }
+
+			// Initialize keyboard handling
+			document.addEventListener('DOMContentLoaded', () => {
+				setupKeyboardHandling();
+				// Ensure duty info preview works for the first row
+				const rows = document.querySelectorAll('.duty-row');
+				rows.forEach(row => {
+					const dutyNumberInput = row.querySelector('.duty-number');
+					const dateInput = row.querySelector('.duty-date');
+					const dutyTypeInput = row.querySelector('.duty-type');
+					
+					if (dutyNumberInput) {
+						dutyNumberInput.addEventListener('input', () => updateDutyInfo(row));
+					}
+					if (dateInput) {
+						dateInput.addEventListener('input', () => updateDutyInfo(row));
+					}
+					if (dutyTypeInput) {
+						dutyTypeInput.addEventListener('input', (e) => {
+							const value = e.target.value.toUpperCase();
+							e.target.value = value;
+							
+							// Check if the type is recognized and get its color
+							const color = catTypes[value];
+							if (color) {
+								e.target.style.backgroundColor = color;
+								e.target.style.color = 'white';
+							} else {
+								e.target.style.backgroundColor = '';
+								e.target.style.color = '';
+							}
+						});
+					}
+				});
+				
+				// Ensure first row's remove button is hidden
+				const firstRow = document.querySelector('.duty-row');
+				if (firstRow) {
+					firstRow.querySelector('.remove-row').style.visibility = 'hidden';
+				}
+			});
+
+			function setupKeyboardHandling() {
+				const rows = document.querySelectorAll('.duty-row');
+				rows.forEach(row => {
+					const typeInput = row.querySelector('.duty-type');
+					const dutyInput = row.querySelector('.duty-number');
+					const dateInput = row.querySelector('.duty-date');
+
+					// Only add event listeners if the inputs exist
+					if (typeInput) {
+						typeInput.addEventListener('click', function() {
+							this.value = '';
+							this.style.backgroundColor = '';
+							this.style.color = '';
+						});
+
+						typeInput.addEventListener('keypress', (e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								if (dutyInput) dutyInput.focus();
+							}
+						});
+					}
+
+					if (dutyInput) {
+						dutyInput.addEventListener('click', function() {
+							this.value = '';
+						});
+
+						dutyInput.addEventListener('keypress', (e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								if (dateInput) dateInput.focus();
+							}
+						});
+					}
+
+					if (dateInput) {
+						dateInput.addEventListener('keypress', (e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								addDutyRow();
+								const newRows = document.getElementsByClassName('duty-row');
+								const lastRow = newRows[newRows.length - 1];
+								lastRow?.querySelector('.duty-type')?.focus();
+							}
+						});
+					}
+				});
+			}
+			
+            function toggleAboutSection() {
+                const aboutText = document.getElementById('aboutText');
+                if (aboutText.style.display === 'none' || aboutText.style.display === '') {
+                    aboutText.style.display = 'block';
+                } else {
+                    aboutText.style.display = 'none';
+                }
+            }			
+        </script>
+    </body>
+</html>
