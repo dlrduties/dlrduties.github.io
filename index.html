@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
     <head>
@@ -217,6 +218,10 @@
                 cursor: pointer;
                 padding: 4px 8px;
             }
+
+			#continueButton {
+				margin-top: 20px;
+			}
 
             /* Duty lookup styles */
             .lookup-result {
@@ -492,6 +497,18 @@
 					width: 100%;
 				}
 
+				.lookup-header {
+					display: flex;
+					flex-direction: column;
+					align-items: flex-start;
+					gap: 8px;
+				}
+
+				.lookup-header-details {
+					width: 100%;
+					text-align: left;
+				}
+				
 				.section-item {
 					flex-direction: column;
 					gap: 2px;
@@ -1169,7 +1186,7 @@
 			}
 
 			function selectMultiVersionDetails(dutyNumber, versionIndex) {
-				console.log("Called selectMultiVersionDetails with:", dutyNumber, versionIndex);  // Add this line
+				console.log("Called selectMultiVersionDetails with:", dutyNumber, versionIndex);
 				const resultDiv = document.getElementById('manualLookupResult');
 				const backButton = document.getElementById('backToVersionsBtn');
 				const versions = getAllDutyVersions(dutyNumber);
@@ -1206,7 +1223,7 @@
 							<div class="lookup-section">
 								<div class="section-item">
 									<span class="section-label">Book on:</span>
-									<span>${startTime} at ${location}</span>
+									<span>${startTime}${location ? ` at ${location}` : ''}</span>
 								</div>
 							</div>
 				`;
@@ -1295,11 +1312,11 @@
 					<div class="lookup-section">
 						<div class="section-item">
 							<span class="section-label">Book off:</span>
-							<span>${endTime} at ${endLocation}</span>
+							<span>${endTime}${endLocation ? ` at ${endLocation}` : ''}</span>
 						</div>
 					</div>`;
 
-				// Copy button (Moved above Version Info)
+				// Copy button
 				content += `
 					<div class="lookup-actions">
 						<button onclick="copyDutyDetails('${dutyId}')">Copy to Clipboard</button>
@@ -1325,6 +1342,10 @@
 							</div>
 						</div>`;
 				}
+
+				content += `
+						</div>
+					</div>`;
 
 				return content;
 			}
@@ -1566,13 +1587,15 @@
 					}
 				});
 				
-				// Add click event to clear input when clicked
 				[dutyTypeInput, dutyNumberInput].forEach(input => {
 					input.addEventListener('click', function() {
 						this.value = '';
 						if (this.classList.contains('duty-type')) {
 							this.style.backgroundColor = '';
 							this.style.color = '';
+						}
+						if (this === dutyNumberInput) {
+							updateDutyInfo(this.closest('.duty-row'));
 						}
 					});
 				});
@@ -1614,6 +1637,7 @@
 								this.style.backgroundColor = '';
 								this.style.color = '';
 							}
+							updateDutyInfo(row);
 						});
 					});
 
@@ -1672,7 +1696,9 @@
 						const resultDiv = document.getElementById('manualLookupResult');
 						const backButton = document.getElementById('backToVersionsBtn');
 						document.getElementById('manualDutyNumber').value = dutyNumber;
-						backButton.style.display = 'inline-block';
+						const allVersions = getAllDutyVersions(dutyNumber);
+						const groupedVersions = groupIdenticalDuties(allVersions);
+						backButton.style.display = groupedVersions.length > 1 ? 'inline-block' : 'none';
 						resultDiv.innerHTML = formatDutyDetails(versions[0].duty, versions[0].dutyId, versions[0]);
 						document.getElementById('manualDutyNumber').scrollIntoView({ behavior: 'smooth' });
 					};
@@ -1685,6 +1711,16 @@
                 const date = new Date();
                 const generatedDate = date.toLocaleDateString().split("/").reverse().join("");
                 
+				const validRows = Array.from(rows).filter(row => {
+					const dateStr = row.querySelector('.duty-date')?.value;
+					const dutyType = row.querySelector('.duty-type')?.value?.trim();
+					const dutyNumberInput = row.querySelector('.duty-number')?.value?.trim();
+
+					return dateStr && (dutyType || dutyNumberInput);
+				});
+
+				if (validRows.length === 0) return;				
+				
                 let icsContent = `BEGIN:VCALENDAR
 CALSCALE:GREGORIAN
 X-LOTUS-CHARSET:UTF-8
@@ -1700,14 +1736,14 @@ VERSION:2.0
                     
                     if (!dateStr) continue;
 
-                    if (dutyType === "SPARE" || dutyType === "TRAINING" || dutyType === "PANEL" || dayNames[dutyType]) {
-                        icsContent += generateSpecialDutyEvent({
-                            date: dateStr,
-                            dutyType: dutyType,
-                            dutyNumber: dutyNumber
-                        });
-                        continue;
-                    }
+					if ((dutyType === "SPARE" || dutyType === "TRAINING" || dutyType === "PANEL" || dayNames[dutyType]) || (dutyType && !dutyNumber)) {
+						icsContent += generateSpecialDutyEvent({
+							date: dateStr,
+							dutyType: dutyType,
+							dutyNumber: dutyNumber
+						}) + "\n";
+						continue;
+					}
 
                     if (!dutyNumber) continue;
 
@@ -1718,15 +1754,15 @@ VERSION:2.0
                         const dutyId = versions[0].dutyId;
                         const [, location, , startTime, endTime] = dutyId.split('-');
                         
-                        icsContent += generateDutyEvent({
-                            date: dateStr,
-                            dutyNumber: dutyNumber,
-                            dutyType: dutyType || duty.TypeOfDuty,
-                            startTime: startTime,
-                            endTime: endTime,
-                            location: location,
-                            duty: duty
-                        });
+						icsContent += generateDutyEvent({
+							date: dateStr,
+							dutyNumber: dutyNumber,
+							dutyType: dutyType || duty.TypeOfDuty,
+							startTime: startTime,
+							endTime: endTime,
+							location: location,
+							duty: duty
+						}) + "\n";
                     }
                 }
                 
@@ -1775,59 +1811,104 @@ END:VEVENT
                 const { date, dutyType, dutyNumber } = params;
                 const dateStr = formatDateForICS(date);
                 const uid = `dlr-${dateStr}-${generateId(5)}`;
-
+                
                 // For special duties, end date is next day
                 const nextDay = new Date(date);
                 nextDay.setDate(nextDay.getDate() + 1);
                 const endDate = formatDateForICS(nextDay.toISOString().split('T')[0]);
-
+                
                 const eventTitle = dutyNumber ? 
-                    `${dutyType} ${dutyNumber}` : 
+                    `${dayNames[dutyType] || dutyType} ${dutyNumber}` :
                     (dayNames[dutyType] || dutyType);
-
-                return `BEGIN:VEVENT
+                
+                // Check if duty ID contains specific times
+                const versions = getAllDutyVersions(dutyNumber);
+                let eventString = `BEGIN:VEVENT
 UID:${uid}
 SUMMARY:${eventTitle}
 DTSTART;VALUE=DATE:${dateStr}
 DTEND;VALUE=DATE:${endDate}
-X-MICROSOFT-CDO-BUSYSTATUS:${['T', 'SB', 'TRAINING'].includes(dutyType) ? 'BUSY' : 'FREE'}
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
 X-MICROSOFT-CDO-ALLDAYEVENT:TRUE
-CATEGORIES:${dutyType}
+CATEGORIES:${dayNames[dutyType] ? dutyType : ''}
 PRIORITY:0
 STATUS:CONFIRMED
-END:VEVENT
-`;
-            }
+END:VEVENT`;
+                
+                if (versions.length > 0) {
+                    const dutyId = versions[0].dutyId;
+                    const parts = dutyId.split('-');
+                    if (parts.length >= 4) {
+                        const startTime = parts[3];
+                        const endTime = parts[4];
+                        
+                        // If valid times exist, replace the all-day event
+                        if (startTime && endTime && startTime !== '00:00' && endTime !== '00:00') {
+                            // Generate description
+                            const description = generateEventDescription(
+                                versions[0].duty, 
+                                startTime, 
+                                endTime, 
+                                parts[1] // location
+                            ).replace(/\n/g, '\\n');
 
-            function generateEventDescription(duty, startTime, endTime, location) {
-                let desc = `Book on at ${startTime} ${location}.\\n\\n`;
-
-                if (duty.TypeOfDuty === "SPARE" || duty.TypeOfDuty === "TRAINING" || duty.TypeOfDuty === "PANEL") {
-                    desc += `${duty.TypeOfDuty}\\n`;
-                } else {
-                    // First Half
-                    desc += `First Half (${duty.FirstHalfLength}):\\n`;
-                    if (duty.FirstHalfRunNumber && duty.FirstHalfRunNumber !== "TR") {
-                        desc += `R${duty.FirstHalfRunNumber} ${duty.FirstHalfStartLocation} ${duty.FirstHalfStartTime} ${duty.FirstHalfEndTime} ${duty.FirstHalfEndLocation}\\n\\n`;
-                    }
-
-                    // Break Details
-                    if (duty.FirstHalfEndTime && duty.SecondHalfStartTime) {
-                        desc += `Break: ${calculateBreakDetails(duty)}\\n\\n`;
-                    }
-
-                    // Second Half
-                    desc += `Second Half (${duty.SecondHalfLength}):\\n`;
-                    if (duty.SecondHalfRunNumber && duty.SecondHalfRunNumber !== "TR") {
-                        desc += `R${duty.SecondHalfRunNumber} ${duty.SecondHalfStartLocation} ${duty.SecondHalfStartTime} ${duty.SecondHalfEndTime} ${duty.SecondHalfEndLocation}\\n`;
+                            eventString = `BEGIN:VEVENT
+UID:${uid}
+SUMMARY:${eventTitle}
+DTSTART;TZID=Europe/London:${dateStr}T${startTime.replace(':', '')}00
+DTEND;TZID=Europe/London:${dateStr}T${endTime.replace(':', '')}00
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+CATEGORIES:${dayNames[dutyType] ? dutyType : ''}
+PRIORITY:0
+STATUS:CONFIRMED
+DESCRIPTION:${description}
+END:VEVENT`;
+                        }
                     }
                 }
-
-                desc += `\\nBook off at ${endTime} ${location}\\n`;
-                desc += `Spread time: ${duty.Spreadtime}\\nPaid time: ${duty.PaidTime}`;
-
-                return desc;
+                
+                return eventString;
             }
+
+			function generateEventDescription(duty, startTime, endTime, location) {
+				let desc = `Book on at ${startTime}`;
+				if (location) desc += ` ${location}`;
+				desc += `\\n`;
+
+				if (duty.TypeOfDuty === "SPARE" || duty.TypeOfDuty === "TRAINING" || duty.TypeOfDuty === "PANEL") {
+					desc += `${duty.TypeOfDuty}\\n`;
+				} else {
+					// First Half
+					desc += `First Half (${duty.FirstHalfLength}):\\n`;
+					if (duty.FirstHalfRunNumber && duty.FirstHalfRunNumber !== "TR") {
+						desc += `R${duty.FirstHalfRunNumber} ${duty.FirstHalfStartLocation} ${duty.FirstHalfStartTime} ${duty.FirstHalfEndTime} ${duty.FirstHalfEndLocation}\\n\\n`;
+					}
+
+					// Break Details
+					if (duty.FirstHalfEndTime && duty.SecondHalfStartTime) {
+						desc += `Break: ${calculateBreakDetails(duty)}\\n\\n`;
+					}
+
+					// Second Half
+					desc += `Second Half (${duty.SecondHalfLength}):\\n`;
+					if (duty.SecondHalfRunNumber && duty.SecondHalfRunNumber !== "TR") {
+						desc += `R${duty.SecondHalfRunNumber} ${duty.SecondHalfStartLocation} ${duty.SecondHalfStartTime} ${duty.SecondHalfEndTime} ${duty.SecondHalfEndLocation}\\n`;
+					}
+				}
+
+				desc += `Book off at ${endTime}`;
+				if (location) desc += ` ${location}`;
+				desc += `\\n`;
+
+				if (duty.Spreadtime) {
+					desc += `Spread time: ${duty.Spreadtime}\\n`;
+				}
+				if (duty.PaidTime) {
+					desc += `Paid time: ${duty.PaidTime}`;
+				}
+
+				return desc;
+			}
 
 			function calculateEventEnd(date, endTime) {
 				const [hours] = endTime.split(':').map(Number);
@@ -1835,7 +1916,8 @@ END:VEVENT
 				let finishTime = endTime;
 
 				// Handle times after midnight
-				if (hours >= 24) {
+				if (hours >= 24) {
+
 					finishTime = '23:59';
 				}
 
@@ -1923,6 +2005,7 @@ END:VEVENT
 							this.value = '';
 							this.style.backgroundColor = '';
 							this.style.color = '';
+							updateDutyInfo(row);
 						});
 
 						typeInput.addEventListener('keypress', (e) => {
@@ -1936,6 +2019,7 @@ END:VEVENT
 					if (dutyInput) {
 						dutyInput.addEventListener('click', function() {
 							this.value = '';
+							updateDutyInfo(this.closest('.duty-row'));
 						});
 
 						dutyInput.addEventListener('keypress', (e) => {
