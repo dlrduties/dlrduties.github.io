@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Access - OwnGOAL</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #1e88e5;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            background-color: #242424;
+            border: 1px solid #424242;
+            border-radius: 5px;
+            color: #ffffff;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #1e88e5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #1565c0;
+        }
+
+        #message {
+            margin-top: 16px;
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .success {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+
+        .error {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Request Access</h1>
+        <form id="accessRequestForm">
+            <div class="form-group">
+                <input 
+                    type="email" 
+                    id="emailInput" 
+                    placeholder="Enter your KAD email address" 
+                    required 
+                    autocomplete="email"
+                >
+            </div>
+            <button type="submit">Submit Access Request</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script>
+        // Initialize Firebase (use the same config as in the main app)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkKclvdWHVQ58IFG_ap0ByJA_2a8J2YXU",
+            authDomain: "owngoal-4f34f.firebaseapp.com",
+            projectId: "owngoal-4f34f",
+            storageBucket: "owngoal-4f34f.firebasestorage.app",
+            messagingSenderId: "270078133518",
+            appId: "1:270078133518:web:36ef7431fda632bed1c35f"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Form submission handler
+        document.getElementById('accessRequestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageDiv = document.getElementById('message');
+            const submitButton = e.target.querySelector('button');
+            const emailInput = document.getElementById('emailInput');
+            
+            // Disable button to prevent multiple submissions
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+            messageDiv.textContent = '';
+            messageDiv.className = '';
+
+            try {
+                const email = emailInput.value.trim();
+
+                // Validate email domain
+                if (!email.endsWith('@keolisameydlr.co.uk')) {
+                    throw new Error('You must use your KAD email address.');
+                }
+
+                // Check if email already has a pending request
+                const existingRequests = await db.collection('access_requests')
+                    .where('email', '==', email)
+                    .where('status', '==', 'pending')
+                    .get();
+
+                if (!existingRequests.empty) {
+                    throw new Error('An access request for this email is already pending.');
+                }
+
+                // Submit access request
+                await db.collection('access_requests').add({
+                    email,
+                    status: 'pending',
+                    requestedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Success message
+                messageDiv.textContent = 'Access request submitted successfully! We will review your request soon.';
+                messageDiv.className = 'success';
+
+                // Reset form
+                e.target.reset();
+            } catch (error) {
+                // Error handling
+                messageDiv.textContent = error.message || 'Failed to submit access request. Please try again.';
+                messageDiv.className = 'error';
+            } finally {
+                // Re-enable button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit Access Request';
+            }
+        });
+    </script>
+</body>
+</html>
