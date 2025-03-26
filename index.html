@@ -919,50 +919,60 @@
 				}
 			}			
 
-			// Handle enter key in login form
-			document.addEventListener('DOMContentLoaded', function() {
-				// Check if we have valid cached data before showing login
+			// First check for cached data before anything else
+			(function checkCachedData() {
+				// Try to use cached data before any Firebase operations
 				const cachedData = localStorage.getItem('dutyData');
 				const lastUpdated = localStorage.getItem('dutyDataLastUpdated');
 				const currentTime = new Date().getTime();
 				
-				// If we have cached data and it's less than 24 hours old, skip login
+				// If we have cached data and it's less than 24 hours old, use it immediately
 				if (cachedData && lastUpdated && (currentTime - parseInt(lastUpdated) < 24 * 60 * 60 * 1000)) {
 					try {
 						// Load cached data
 						dutyData = JSON.parse(cachedData);
 						
-						// Skip login and go directly to main content
-						document.getElementById('splashScreen').style.display = 'none';
-						document.getElementById('mainContent').style.display = 'block';
+						// Skip login completely and show main content
+						window.addEventListener('DOMContentLoaded', function() {
+							document.getElementById('splashScreen').style.display = 'none';
+							document.getElementById('mainContent').style.display = 'block';
+						});
+						
+						// Set a flag to indicate we're using cached data
+						window.usingCachedData = true;
 						return;
 					} catch (error) {
 						console.error('Error parsing cached data:', error);
-						// Continue with normal flow if there's an error with cached data
+						// Continue with normal auth flow if cache parse fails
 					}
 				}
-				
-				// Only proceed with login flow if no valid cached data exists
-				const passwordInput = document.getElementById('passwordInput');
-				if (passwordInput) {
-					passwordInput.addEventListener('keypress', function(event) {
-						if (event.key === 'Enter') {
-							event.preventDefault();
-							signIn();
+			})();
+
+			// Handle enter key in login form and other initialization
+			document.addEventListener('DOMContentLoaded', function() {
+				// Only set up login handlers if we're not using cached data
+				if (!window.usingCachedData) {
+					const passwordInput = document.getElementById('passwordInput');
+					if (passwordInput) {
+						passwordInput.addEventListener('keypress', function(event) {
+							if (event.key === 'Enter') {
+								event.preventDefault();
+								signIn();
+							}
+						});
+					}
+					
+					// Check if user is already signed in
+					firebase.auth().onAuthStateChanged((user) => {
+						if (user) {
+							// User is signed in, fetch data
+							document.getElementById('loginForm').style.display = 'none';
+							document.getElementById('loadingData').style.display = 'block';
+							document.getElementById('loadingStatus').textContent = 'Connected! Fetching duty files...';
+							fetchDutyData();
 						}
 					});
 				}
-				
-				// Check if user is already signed in
-				firebase.auth().onAuthStateChanged((user) => {
-					if (user) {
-						// User is signed in, fetch data
-						document.getElementById('loginForm').style.display = 'none';
-						document.getElementById('loadingData').style.display = 'block';
-						document.getElementById('loadingStatus').textContent = 'Connected! Fetching duty files...';
-						fetchDutyData();
-					}
-				});
 			});
 
 			// Sign out function
@@ -2332,31 +2342,78 @@ END:VEVENT`;
             }			
 		</script>
         
-        <!-- Firebase SDK -->
-        <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-        <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-
-        <script>
-            // Initialize Firebase with your config
-            const firebaseConfig = {
-              apiKey: "AIzaSyBkKclvdWHVQ58IFG_ap0ByJA_2a8J2YXU",
-              authDomain: "owngoal-4f34f.firebaseapp.com",
-              projectId: "owngoal-4f34f",
-              storageBucket: "owngoal-4f34f.firebasestorage.app",
-              messagingSenderId: "270078133518",
-              appId: "1:270078133518:web:36ef7431fda632bed1c35f"
-            };
-            
-            // Initialize Firebase
-            firebase.initializeApp(firebaseConfig);
-			
-			// Set persistence to LOCAL (persists even when the browser is closed)
-			firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-				.catch(error => {
-					console.error("Persistence error:", error);
-				});			
+		<!-- Firebase SDK - only loads if needed -->
+		<script>
+		// Only load Firebase if we don't have valid cached data
+		if (!window.usingCachedData) {
+			function loadFirebase() {
+				// Load Firebase scripts in sequence
+				const loadScript = (src, callback) => {
+					const script = document.createElement('script');
+					script.src = src;
+					script.onload = callback;
+					document.body.appendChild(script);
+				};
 				
-        </script>
+				// Load app first, then auth, then storage
+				loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js', () => {
+					loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js', () => {
+						loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js', () => {
+							// Initialize Firebase after all scripts are loaded
+							const firebaseConfig = {
+								apiKey: "AIzaSyBkKclvdWHVQ58IFG_ap0ByJA_2a8J2YXU",
+								authDomain: "owngoal-4f34f.firebaseapp.com",
+								projectId: "owngoal-4f34f",
+								storageBucket: "owngoal-4f34f.firebasestorage.app",
+								messagingSenderId: "270078133518",
+								appId: "1:270078133518:web:36ef7431fda632bed1c35f"
+							};
+							
+							// Initialize Firebase
+							firebase.initializeApp(firebaseConfig);
+							
+							// Set persistence to LOCAL
+							firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+								.catch(error => {
+									console.error("Persistence error:", error);
+								});
+								
+							// Check if DOMContentLoaded already fired
+							if (document.readyState === 'loading') {
+								// If not, wait for it
+								document.addEventListener('DOMContentLoaded', initFirebaseAuth);
+							} else {
+								// If already loaded, init immediately
+								initFirebaseAuth();
+							}
+						});
+					});
+				});
+			}
+			
+			function initFirebaseAuth() {
+				// Check if user is already signed in
+				firebase.auth().onAuthStateChanged((user) => {
+					if (user) {
+						// User is signed in, fetch data
+						document.getElementById('loginForm').style.display = 'none';
+						document.getElementById('loadingData').style.display = 'block';
+						document.getElementById('loadingStatus').textContent = 'Connected! Fetching duty files...';
+						fetchDutyData();
+					}
+				});
+			}
+			
+			// Load Firebase
+			loadFirebase();
+		} else {
+			// Create a placeholder firebase object to prevent errors
+			window.firebase = {
+				auth: () => ({ 
+					signOut: () => Promise.resolve() 
+				})
+			};
+		}
+		</script>
     </body>
 </html>
