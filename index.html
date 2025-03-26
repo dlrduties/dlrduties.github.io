@@ -572,10 +572,11 @@
 						<input type="email" id="emailInput" placeholder="Email" class="duty-number-lookup">
 						<input type="password" id="passwordInput" placeholder="Password" class="duty-number-lookup" style="margin-bottom: 16px;">
 						<button id="loginButton" onclick="signIn()">Sign In</button>
+						<a href="#" onclick="showPasswordResetForm(); return false;" style="font-size: 14px; margin-top: 12px; display: inline-block;">Reset Password</a>
 					</div>
 					<p id="loginError" style="color: #e53935; display: none;"></p>
 				</div>
-								
+			
 				<!-- Loading indicator (initially hidden) -->
 				<div id="loadingData" style="display: none;">
 					<p>Loading duty data files...</p>
@@ -584,6 +585,23 @@
 					</div>
 					<p id="loadingStatus" style="font-size: 12px; color: #888; margin-top: 8px;">Connecting...</p>
 				</div>
+			</div>
+		</div>
+
+		<!-- Password Reset Modal -->
+		<div id="passwordResetModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.7); z-index: 1010; justify-content: center; align-items: center;">
+			<div style="background-color: #1e1e1e; border-radius: 8px; padding: 20px; width: 90%; max-width: 400px;">
+				<h3 style="color: #1e88e5; margin-top: 0;">Reset Password</h3>
+				<p style="margin-bottom: 20px;">Enter your email address to receive a link to reset your password.</p>
+				
+				<div style="display: flex; flex-direction: column;">
+					<input type="email" id="resetEmailInput" placeholder="Email" class="duty-number-lookup" style="margin-bottom: 16px; width: 100%;">
+					<div style="display: flex; gap: 10px;">
+						<button onclick="sendPasswordReset()" style="flex: 1;">Send Reset Link</button>
+						<button onclick="hidePasswordResetForm()" style="background-color: #424242; flex: 1;">Cancel</button>
+					</div>
+				</div>
+				<p id="resetMessage" style="margin-top: 16px; display: none;"></p>
 			</div>
 		</div>
 
@@ -918,6 +936,110 @@
 						return "Login error: " + error.message;
 				}
 			}			
+
+			// Password reset functions
+			function showPasswordResetForm() {
+				const modal = document.getElementById('passwordResetModal');
+				modal.style.display = 'flex';
+				
+				// Pre-fill with the email from login form if available
+				const loginEmail = document.getElementById('emailInput').value;
+				if (loginEmail) {
+					document.getElementById('resetEmailInput').value = loginEmail;
+				}
+				
+				// Reset any previous messages
+				document.getElementById('resetMessage').style.display = 'none';
+				document.getElementById('resetMessage').textContent = '';
+			}
+
+			function hidePasswordResetForm() {
+				document.getElementById('passwordResetModal').style.display = 'none';
+			}
+
+			function sendPasswordReset() {
+				const email = document.getElementById('resetEmailInput').value;
+				const messageElement = document.getElementById('resetMessage');
+				
+				if (!email) {
+					messageElement.textContent = "Please enter your email address";
+					messageElement.style.color = "#e53935";
+					messageElement.style.display = "block";
+					return;
+				}
+				
+				// Only proceed if Firebase is available
+				if (typeof firebase === 'undefined' || !firebase.auth) {
+					loadFirebaseForReset(email);
+					return;
+				}
+				
+				firebase.auth().sendPasswordResetEmail(email)
+					.then(() => {
+						messageElement.textContent = "Password reset email sent! Check your inbox.";
+						messageElement.style.color = "#4caf50";
+						messageElement.style.display = "block";
+						
+						// Auto close after 3 seconds
+						setTimeout(() => {
+							hidePasswordResetForm();
+						}, 3000);
+					})
+					.catch((error) => {
+						let errorMessage;
+						switch (error.code) {
+							case 'auth/user-not-found':
+								errorMessage = "No account found with this email address";
+								break;
+							case 'auth/invalid-email':
+								errorMessage = "Please enter a valid email address";
+								break;
+							default:
+								errorMessage = "Error sending reset email: " + error.message;
+						}
+						messageElement.textContent = errorMessage;
+						messageElement.style.color = "#e53935";
+						messageElement.style.display = "block";
+					});
+			}
+
+			// Load Firebase specifically for password reset if we're using cached data
+			function loadFirebaseForReset(email) {
+				// Show loading message
+				const messageElement = document.getElementById('resetMessage');
+				messageElement.textContent = "Preparing to send reset email...";
+				messageElement.style.color = "#ffffff";
+				messageElement.style.display = "block";
+				
+				// Load Firebase scripts in sequence
+				const loadScript = (src, callback) => {
+					const script = document.createElement('script');
+					script.src = src;
+					script.onload = callback;
+					document.body.appendChild(script);
+				};
+				
+				// Load Firebase Auth
+				loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js', () => {
+					loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js', () => {
+						// Initialize Firebase
+						const firebaseConfig = {
+							apiKey: "AIzaSyBkKclvdWHVQ58IFG_ap0ByJA_2a8J2YXU",
+							authDomain: "owngoal-4f34f.firebaseapp.com",
+							projectId: "owngoal-4f34f",
+							storageBucket: "owngoal-4f34f.firebasestorage.app",
+							messagingSenderId: "270078133518",
+							appId: "1:270078133518:web:36ef7431fda632bed1c35f"
+						};
+						
+						// Initialize Firebase
+						firebase.initializeApp(firebaseConfig);
+						
+						// Now send the reset email
+						sendPasswordReset();
+					});
+				});
+			}
 
 			// First check for cached data before anything else
 			(function checkCachedData() {
