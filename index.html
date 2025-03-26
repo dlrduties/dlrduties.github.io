@@ -115,7 +115,17 @@
 				max-width: 500px;
 				width: 90%;
 			}
+			.login-fields {
+				display: flex;
+				flex-direction: column;
+				width: 100%;
+				max-width: 300px;
+				margin: 0 auto;
+			}
 
+			.login-fields input {
+				margin-bottom: 8px;
+			}
             .splash-title {
                 color: #1e88e5;
                 margin-bottom: 20px;
@@ -557,13 +567,15 @@
 				
 				<!-- Login Form -->
 				<div id="loginForm">
-					<p>Please sign in to access duty data</p>
-					<input type="email" id="emailInput" placeholder="Email" class="duty-number-lookup" style="margin-bottom: 8px;">
-					<input type="password" id="passwordInput" placeholder="Password" class="duty-number-lookup" style="margin-bottom: 16px;">
-					<button id="loginButton" onclick="signIn()">Sign In</button>
+					<p>Please sign in to access OwnGOAL</p>
+					<div class="login-fields">
+						<input type="email" id="emailInput" placeholder="Email" class="duty-number-lookup">
+						<input type="password" id="passwordInput" placeholder="Password" class="duty-number-lookup" style="margin-bottom: 16px;">
+						<button id="loginButton" onclick="signIn()">Sign In</button>
+					</div>
 					<p id="loginError" style="color: #e53935; display: none;"></p>
 				</div>
-				
+								
 				<!-- Loading indicator (initially hidden) -->
 				<div id="loadingData" style="display: none;">
 					<p>Loading duty data files...</p>
@@ -610,7 +622,6 @@
                     
                     <pre id="output"></pre>
                     
-						<a href="#" onclick="returnToSplash(); return false;" style="display: block; margin-top: 40px;">Return to File Upload</a>
 						<a href="#" onclick="signOut(); return false;" style="display: block; margin-top: 20px;">Sign Out</a>										
 						<div id="aboutSection" style="margin-top: 20px;">
                         <a href="#" id="aboutLink" onclick="toggleAboutSection(); return false;">About this tool</a>
@@ -885,12 +896,27 @@
 						fetchDutyData();
 					})
 					.catch((error) => {
-						// Show error message
-						errorElement.textContent = error.message;
+						// Show user-friendly error message
+						errorElement.textContent = getUserFriendlyAuthError(error);
 						errorElement.style.display = "block";
 						document.getElementById('loginButton').disabled = false;
 					});
 			}
+			
+			function getUserFriendlyAuthError(error) {
+				switch (error.code) {
+					case 'auth/invalid-login-credentials':
+					case 'auth/user-not-found':
+					case 'auth/wrong-password':
+						return "Incorrect email or password. Please try again.";
+					case 'auth/too-many-requests':
+						return "Too many failed login attempts. Please try again later.";
+					case 'auth/network-request-failed':
+						return "Network connection error. Please check your internet connection.";
+					default:
+						return "Login error: " + error.message;
+				}
+			}			
 
 			// Handle enter key in login form
 			document.addEventListener('DOMContentLoaded', function() {
@@ -942,89 +968,140 @@
 					});
 			}
 
-			// Function to fetch duty data from Firebase Storage
+			// Function to fetch duty data from Firebase Storage or cache
 			function fetchDutyData() {
 				const loadingBar = document.getElementById('loadingBar');
 				const loadingStatus = document.getElementById('loadingStatus');
-				let filesLoaded = 0;
-				let totalFiles = 0;
 				
-				// Reset duty data
-				dutyData = {
-					base: {},
-					singleTemp: {},
-					rangeTemp: []
-				};
+				// Check if we have cached data and when it was last updated
+				const cachedData = localStorage.getItem('dutyData');
+				const lastUpdated = localStorage.getItem('dutyDataLastUpdated');
+				const currentTime = new Date().getTime();
 				
-				// Reference to your storage bucket's duty-files folder
-				const storageRef = firebase.storage().ref('duty-files');
+				// If we have cached data and it's less than 24 hours old, use it
+				if (cachedData && lastUpdated && (currentTime - parseInt(lastUpdated) < 24 * 60 * 60 * 1000)) {
+					loadingStatus.textContent = 'Loading data from cache...';
+					loadingBar.style.width = '50%';
+					
+					try {
+						dutyData = JSON.parse(cachedData);
+						loadingBar.style.width = '100%';
+						
+						// Format the last updated time nicely
+						const lastUpdateDate = new Date(parseInt(lastUpdated));
+						const formattedDate = lastUpdateDate.toLocaleDateString() + ' ' + 
+											   lastUpdateDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+						
+						loadingStatus.textContent = 'Using cached data from ' + formattedDate;
+						
+						setTimeout(() => {
+							continueToDutyTool();
+						}, 1000);
+					} catch (error) {
+						console.error('Error parsing cached data:', error);
+						loadingStatus.textContent = 'Cache error, fetching fresh data...';
+						fetchFreshData();
+					}
+					return;
+				}
 				
-				// List all files in the storage
-				storageRef.listAll()
-					.then((result) => {
-						totalFiles = result.items.length;
-						
-						if (totalFiles === 0) {
-							loadingStatus.textContent = 'No duty files found. Please contact administrator.';
-							return;
-						}
-						
-						loadingStatus.textContent = `Loading ${totalFiles} duty files...`;
-						
-						// Process each file
-						result.items.forEach((fileRef) => {
-							fileRef.getDownloadURL()
-								.then((url) => {
-									// Fetch the file content
-									fetch(url)
-										.then(response => response.text())
-										.then(content => {
-											try {
-												// Parse JSON from the file
-												const jsonMatch = content.match(/var\s+ExtractedDuties\s*=\s*(\{.*\});/s);
-												if (jsonMatch) {
-													const duties = JSON.parse(jsonMatch[1]);
-													processDutyFile(fileRef.name, duties);
-													loadingStatus.textContent = `Processed ${fileRef.name} (${filesLoaded+1}/${totalFiles})`;
-												} else {
-													console.error('JSON pattern not found in file:', fileRef.name);
+				// If no valid cache, fetch fresh data
+				fetchFreshData();
+				
+				// Function to fetch fresh data from Firebase
+				function fetchFreshData() {
+					let filesLoaded = 0;
+					let totalFiles = 0;
+					
+					// Reset duty data
+					dutyData = {
+						base: {},
+						singleTemp: {},
+						rangeTemp: []
+					};
+					
+					loadingStatus.textContent = 'Fetching latest duty data...';
+					loadingBar.style.width = '0%';
+					
+					// Reference to your storage bucket's duty-files folder
+					const storageRef = firebase.storage().ref('duty-files');
+					
+					// List all files in the storage
+					storageRef.listAll()
+						.then((result) => {
+							totalFiles = result.items.length;
+							
+							if (totalFiles === 0) {
+								loadingStatus.textContent = 'No duty files found. Please contact administrator.';
+								return;
+							}
+							
+							loadingStatus.textContent = `Loading ${totalFiles} duty files...`;
+							
+							// Process each file
+							result.items.forEach((fileRef) => {
+								fileRef.getDownloadURL()
+									.then((url) => {
+										// Fetch the file content
+										fetch(url)
+											.then(response => response.text())
+											.then(content => {
+												try {
+													// Parse JSON from the file
+													const jsonMatch = content.match(/var\s+ExtractedDuties\s*=\s*(\{.*\});/s);
+													if (jsonMatch) {
+														const duties = JSON.parse(jsonMatch[1]);
+														processDutyFile(fileRef.name, duties);
+														loadingStatus.textContent = `Processed ${fileRef.name} (${filesLoaded+1}/${totalFiles})`;
+													} else {
+														console.error('JSON pattern not found in file:', fileRef.name);
+													}
+												} catch (error) {
+													console.error('Error processing file:', fileRef.name, error);
+													loadingStatus.textContent = `Error in file ${fileRef.name}: ${error.message}`;
 												}
-											} catch (error) {
-												console.error('Error processing file:', fileRef.name, error);
-												loadingStatus.textContent = `Error in file ${fileRef.name}: ${error.message}`;
-											}
-											
-											// Update loading progress
-											filesLoaded++;
-											loadingBar.style.width = `${Math.round((filesLoaded / totalFiles) * 100)}%`;
-											
-											// If all files are loaded, continue to main app
-											if (filesLoaded === totalFiles) {
-												loadingStatus.textContent = `All ${totalFiles} files loaded successfully!`;
-												setTimeout(() => {
-													continueToDutyTool();
-												}, 1000); // Small delay for smooth UI
-											}
-										})
-										.catch((error) => {
-											console.error('Error downloading content for file:', fileRef.name, error);
-											filesLoaded++;
-											loadingStatus.textContent = `Error loading ${fileRef.name}: ${error.message}`;
-											loadingBar.style.width = `${Math.round((filesLoaded / totalFiles) * 100)}%`;
-										});
-								})
-								.catch((error) => {
-									console.error('Error getting download URL for file:', fileRef.name, error);
-									filesLoaded++;
-									loadingStatus.textContent = `Error accessing ${fileRef.name}: ${error.message}`;
-									loadingBar.style.width = `${Math.round((filesLoaded / totalFiles) * 100)}%`;
-								});
+												
+												// Update loading progress
+												filesLoaded++;
+												loadingBar.style.width = `${Math.round((filesLoaded / totalFiles) * 100)}%`;
+												
+												// If all files are loaded, cache and continue to main app
+												if (filesLoaded === totalFiles) {
+													// Cache the data
+													try {
+														localStorage.setItem('dutyData', JSON.stringify(dutyData));
+														localStorage.setItem('dutyDataLastUpdated', currentTime.toString());
+														loadingStatus.textContent = `All files loaded and cached successfully!`;
+													} catch (e) {
+														console.error('Error caching data:', e);
+														loadingStatus.textContent = `All files loaded but couldn't cache (${e.message})`;
+													}
+													
+													setTimeout(() => {
+														continueToDutyTool();
+													}, 1000);
+												}
+											})
+											.catch((error) => {
+												console.error('Error downloading content for file:', fileRef.name, error);
+												filesLoaded++;
+												loadingStatus.textContent = `Error loading ${fileRef.name}: ${error.message}`;
+												loadingBar.style.width = `${Math.round((filesLoaded / totalFiles) * 100)}%`;
+											});
+									})
+									.catch((error) => {
+										console.error('Error getting download URL for file:', fileRef.name, error);
+										filesLoaded++;
+										loadingStatus.textContent = `Error accessing ${fileRef.name}: ${error.message}`;
+										loadingBar.style.width = `${Math.round((filesLoaded / totalFiles) * 100)}%`;
+									});
+							});
+						})
+						.catch((error) => {
+							loadingStatus.textContent = `Error: ${error.message}`;
+							console.error('Error listing files:', error);
 						});
-					})
-					.catch((error) => {
-						loadingStatus.textContent = `Error: ${error.message}`;
-						console.error('Error listing files:', error);
-					});
+				}
 			}
 
             // Function to get duty info for a specific date and duty number
@@ -2255,6 +2332,13 @@ END:VEVENT`;
             
             // Initialize Firebase
             firebase.initializeApp(firebaseConfig);
+			
+			// Set persistence to LOCAL (persists even when the browser is closed)
+			firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+				.catch(error => {
+					console.error("Persistence error:", error);
+				});			
+				
         </script>
     </body>
 </html>
