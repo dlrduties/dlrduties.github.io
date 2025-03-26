@@ -122,8 +122,8 @@
 				max-width: 300px;
 				margin: 0 auto;
 			}
-
-			.login-fields input {
+			.login-fields input, .login-fields button {
+				width: 100%;
 				margin-bottom: 8px;
 			}
             .splash-title {
@@ -567,7 +567,7 @@
 				
 				<!-- Login Form -->
 				<div id="loginForm">
-					<p>Please sign in to access OwnGOAL</p>
+					<p>Please sign in</p>
 					<div class="login-fields">
 						<input type="email" id="emailInput" placeholder="Email" class="duty-number-lookup">
 						<input type="password" id="passwordInput" placeholder="Password" class="duty-number-lookup" style="margin-bottom: 16px;">
@@ -908,6 +908,7 @@
 					case 'auth/invalid-login-credentials':
 					case 'auth/user-not-found':
 					case 'auth/wrong-password':
+					case 'auth/invalid-email':
 						return "Incorrect email or password. Please try again.";
 					case 'auth/too-many-requests':
 						return "Too many failed login attempts. Please try again later.";
@@ -920,6 +921,28 @@
 
 			// Handle enter key in login form
 			document.addEventListener('DOMContentLoaded', function() {
+				// Check if we have valid cached data before showing login
+				const cachedData = localStorage.getItem('dutyData');
+				const lastUpdated = localStorage.getItem('dutyDataLastUpdated');
+				const currentTime = new Date().getTime();
+				
+				// If we have cached data and it's less than 24 hours old, skip login
+				if (cachedData && lastUpdated && (currentTime - parseInt(lastUpdated) < 24 * 60 * 60 * 1000)) {
+					try {
+						// Load cached data
+						dutyData = JSON.parse(cachedData);
+						
+						// Skip login and go directly to main content
+						document.getElementById('splashScreen').style.display = 'none';
+						document.getElementById('mainContent').style.display = 'block';
+						return;
+					} catch (error) {
+						console.error('Error parsing cached data:', error);
+						// Continue with normal flow if there's an error with cached data
+					}
+				}
+				
+				// Only proceed with login flow if no valid cached data exists
 				const passwordInput = document.getElementById('passwordInput');
 				if (passwordInput) {
 					passwordInput.addEventListener('keypress', function(event) {
@@ -930,18 +953,13 @@
 					});
 				}
 				
-				// Check if user is already signed in when page loads
+				// Check if user is already signed in
 				firebase.auth().onAuthStateChanged((user) => {
 					if (user) {
-						// User is already signed in, hide login form and fetch data
-						const loginForm = document.getElementById('loginForm');
-						const loadingData = document.getElementById('loadingData');
-						const loadingStatus = document.getElementById('loadingStatus');
-						
-						if (loginForm) loginForm.style.display = 'none';
-						if (loadingData) loadingData.style.display = 'block';
-						if (loadingStatus) loadingStatus.textContent = 'Connected! Fetching duty files...';
-						
+						// User is signed in, fetch data
+						document.getElementById('loginForm').style.display = 'none';
+						document.getElementById('loadingData').style.display = 'block';
+						document.getElementById('loadingStatus').textContent = 'Connected! Fetching duty files...';
 						fetchDutyData();
 					}
 				});
