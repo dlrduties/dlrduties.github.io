@@ -1954,30 +1954,9 @@
 				// Auto-increment date if previous row has a date
 				const lastDateInput = lastRow.querySelector('.duty-date');
 				if (lastDateInput && lastDateInput.value) {
-					try {
-						// Parse the date safely - YYYY-MM-DD format
-						const [year, month, day] = lastDateInput.value.split('-').map(Number);
-						// Use month-1 because JS months are 0-indexed
-						const lastDate = new Date(year, month - 1, day);
-						
-						// Verify we got a valid date
-						if (!isNaN(lastDate.getTime())) {
-							// Add one day and handle month/year transitions properly
-							lastDate.setDate(lastDate.getDate() + 1);
-							
-							// Format to YYYY-MM-DD, ensuring leading zeros for month and day
-							const nextYear = lastDate.getFullYear();
-							const nextMonth = String(lastDate.getMonth() + 1).padStart(2, '0');
-							const nextDay = String(lastDate.getDate()).padStart(2, '0');
-							
-							dateInput.value = `${nextYear}-${nextMonth}-${nextDay}`;
-							console.log(`Date incremented: ${lastDateInput.value} → ${dateInput.value}`);
-						} else {
-							console.error("Invalid date format detected:", lastDateInput.value);
-						}
-					} catch (error) {
-						console.error("Error incrementing date:", error);
-					}
+					const lastDate = new Date(lastDateInput.value);
+					lastDate.setDate(lastDate.getDate() + 1);
+					dateInput.value = lastDate.toISOString().split('T')[0];
 				}
 
 				// Create remove button
@@ -2384,17 +2363,22 @@ END:VEVENT`;
 
 			// Initialize keyboard handling
 			document.addEventListener('DOMContentLoaded', () => {
-				// First properly initialize the first row that's already in the DOM
-				const firstRow = document.querySelector('.duty-row');
-				if (firstRow) {
-					// Get input elements for first row
-					const dutyTypeInput = firstRow.querySelector('.duty-type');
-					const dutyNumberInput = firstRow.querySelector('.duty-number');
-					const dateInput = firstRow.querySelector('.duty-date');
+				setupKeyboardHandling();
+				// Ensure duty info preview works for the first row
+				const rows = document.querySelectorAll('.duty-row');
+				rows.forEach(row => {
+					const dutyNumberInput = row.querySelector('.duty-number');
+					const dateInput = row.querySelector('.duty-date');
+					const dutyTypeInput = row.querySelector('.duty-type');
 					
-					// Add event listeners directly to ensure they work
+					if (dutyNumberInput) {
+						dutyNumberInput.addEventListener('input', () => updateDutyInfo(row));
+					}
+					if (dateInput) {
+						dateInput.addEventListener('input', () => updateDutyInfo(row));
+					}
 					if (dutyTypeInput) {
-						dutyTypeInput.addEventListener('input', function(e) {
+						dutyTypeInput.addEventListener('input', (e) => {
 							const value = e.target.value.toUpperCase();
 							e.target.value = value;
 							
@@ -2408,65 +2392,8 @@ END:VEVENT`;
 								e.target.style.color = '';
 							}
 						});
-						
-						dutyTypeInput.addEventListener('click', function() {
-							this.value = '';
-							this.style.backgroundColor = '';
-							this.style.color = '';
-							updateDutyInfo(firstRow);
-						});
-						
-						dutyTypeInput.addEventListener('keypress', (e) => {
-							if (e.key === 'Enter') {
-								e.preventDefault();
-								if (dutyNumberInput) dutyNumberInput.focus();
-							}
-						});
 					}
-					
-					if (dutyNumberInput) {
-						dutyNumberInput.addEventListener('input', function() {
-							updateDutyInfo(firstRow);
-						});
-						
-						dutyNumberInput.addEventListener('click', function() {
-							this.value = '';
-							updateDutyInfo(firstRow);
-						});
-						
-						dutyNumberInput.addEventListener('keypress', (e) => {
-							if (e.key === 'Enter') {
-								e.preventDefault();
-								if (dateInput) dateInput.focus();
-							}
-						});
-					}
-					
-					if (dateInput) {
-						dateInput.addEventListener('input', function() {
-							updateDutyInfo(firstRow);
-						});
-						
-						dateInput.addEventListener('keypress', (e) => {
-							if (e.key === 'Enter') {
-								e.preventDefault();
-								addDutyRow();
-								const newRows = document.getElementsByClassName('duty-row');
-								const lastRow = newRows[newRows.length - 1];
-								lastRow?.querySelector('.duty-type')?.focus();
-							}
-						});
-					}
-					
-					// Ensure first row's remove button is hidden
-					const removeBtn = firstRow.querySelector('.remove-row');
-					if (removeBtn) {
-						removeBtn.style.visibility = 'hidden';
-					}
-				}
-				
-				// Call setupKeyboardHandling for any other rows
-				setupKeyboardHandling();
+				});
 				
 				// Ensure first row's remove button is hidden
 				const firstRow = document.querySelector('.duty-row');
