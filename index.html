@@ -867,7 +867,8 @@
 				// Continue even if no duties are loaded yet
 				document.getElementById('splashScreen').style.display = 'none';
 				document.getElementById('mainContent').style.display = 'block';
-				setTimeout(initializeFirstRow, 500); // Slight delay to ensure everything is rendered
+				// Initialize row handlers after content is visible
+				initializeCalendarBuilderRows();
 			}
 
 			function returnToSplash() {
@@ -1253,50 +1254,6 @@
 							console.error('Error listing files:', error);
 						});
 				}
-			}
-
-			function initializeFirstRow() {
-				console.log("Initializing first row");
-				const firstRow = document.querySelector('#icsBuilderRows .duty-row:first-child');
-				
-				if (!firstRow) {
-					console.log("First row not found");
-					return;
-				}
-				
-				// Get input elements
-				const dutyTypeInput = firstRow.querySelector('.duty-type');
-				const dutyNumberInput = firstRow.querySelector('.duty-number');
-				const dateInput = firstRow.querySelector('.duty-date');
-				
-				// Add input handlers
-				if (dutyNumberInput) {
-					console.log("Adding event listener to first row duty number");
-					// Remove any existing listeners (just in case)
-					const newDutyInput = dutyNumberInput.cloneNode(true);
-					dutyNumberInput.parentNode.replaceChild(newDutyInput, dutyNumberInput);
-					
-					// Add fresh event listener
-					newDutyInput.addEventListener('input', function() {
-						console.log("First row duty number changed");
-						updateDutyInfo(firstRow);
-					});
-				}
-				
-				if (dateInput) {
-					console.log("Adding event listener to first row date");
-					// Remove any existing listeners
-					const newDateInput = dateInput.cloneNode(true);
-					dateInput.parentNode.replaceChild(newDateInput, dateInput);
-					
-					// Add fresh event listener
-					newDateInput.addEventListener('input', function() {
-						console.log("First row date changed");
-						updateDutyInfo(firstRow);
-					});
-				}
-				
-				console.log("First row initialization completed");
 			}
 
             // Function to get duty info for a specific date and duty number
@@ -2125,6 +2082,48 @@
 				});
 			}
 
+			function initializeCalendarBuilderRows() {
+				// Re-apply event handlers specifically for all existing rows
+				const rows = document.querySelectorAll('.duty-row');
+				rows.forEach(row => {
+					const dutyNumberInput = row.querySelector('.duty-number');
+					const dateInput = row.querySelector('.duty-date');
+					const dutyTypeInput = row.querySelector('.duty-type');
+					
+					if (dutyNumberInput) {
+						dutyNumberInput.addEventListener('input', () => updateDutyInfo(row));
+					}
+					if (dateInput) {
+						dateInput.addEventListener('input', () => updateDutyInfo(row));
+					}
+					if (dutyTypeInput) {
+						dutyTypeInput.addEventListener('input', (e) => {
+							const value = e.target.value.toUpperCase();
+							e.target.value = value;
+							
+							// Check if the type is recognized and get its color
+							const color = catTypes[value];
+							if (color) {
+								e.target.style.backgroundColor = color;
+								e.target.style.color = 'white';
+							} else {
+								e.target.style.backgroundColor = '';
+								e.target.style.color = '';
+							}
+						});
+					}
+				});
+				
+				// Ensure first row's remove button is hidden
+				const firstRow = document.querySelector('.duty-row');
+				if (firstRow) {
+					firstRow.querySelector('.remove-row').style.visibility = 'hidden';
+				}
+				
+				// Setup keyboard navigation handlers
+				setupKeyboardHandling();
+			}
+
             function removeFirstRow(btn) {
                 const container = document.getElementById('icsBuilderRows');
                 const rows = container.getElementsByClassName('duty-row');
@@ -2412,42 +2411,9 @@ END:VEVENT`;
 
 			// Initialize keyboard handling
 			document.addEventListener('DOMContentLoaded', () => {
-				setupKeyboardHandling();
-				// Ensure duty info preview works for the first row
-				const rows = document.querySelectorAll('.duty-row');
-				rows.forEach(row => {
-					const dutyNumberInput = row.querySelector('.duty-number');
-					const dateInput = row.querySelector('.duty-date');
-					const dutyTypeInput = row.querySelector('.duty-type');
-					
-					if (dutyNumberInput) {
-						dutyNumberInput.addEventListener('input', () => updateDutyInfo(row));
-					}
-					if (dateInput) {
-						dateInput.addEventListener('input', () => updateDutyInfo(row));
-					}
-					if (dutyTypeInput) {
-						dutyTypeInput.addEventListener('input', (e) => {
-							const value = e.target.value.toUpperCase();
-							e.target.value = value;
-							
-							// Check if the type is recognized and get its color
-							const color = catTypes[value];
-							if (color) {
-								e.target.style.backgroundColor = color;
-								e.target.style.color = 'white';
-							} else {
-								e.target.style.backgroundColor = '';
-								e.target.style.color = '';
-							}
-						});
-					}
-				});
-				
-				// Ensure first row's remove button is hidden
-				const firstRow = document.querySelector('.duty-row');
-				if (firstRow) {
-					firstRow.querySelector('.remove-row').style.visibility = 'hidden';
+				// Only initialize immediately if main content is visible (using cached data)
+				if (document.getElementById('mainContent').style.display !== 'none') {
+					initializeCalendarBuilderRows();
 				}
 			});
 
