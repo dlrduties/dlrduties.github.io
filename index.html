@@ -867,6 +867,7 @@
 				// Continue even if no duties are loaded yet
 				document.getElementById('splashScreen').style.display = 'none';
 				document.getElementById('mainContent').style.display = 'block';
+				setTimeout(initializeFirstRow, 500); // Slight delay to ensure everything is rendered
 			}
 
 			function returnToSplash() {
@@ -1252,6 +1253,50 @@
 							console.error('Error listing files:', error);
 						});
 				}
+			}
+
+			function initializeFirstRow() {
+				console.log("Initializing first row");
+				const firstRow = document.querySelector('#icsBuilderRows .duty-row:first-child');
+				
+				if (!firstRow) {
+					console.log("First row not found");
+					return;
+				}
+				
+				// Get input elements
+				const dutyTypeInput = firstRow.querySelector('.duty-type');
+				const dutyNumberInput = firstRow.querySelector('.duty-number');
+				const dateInput = firstRow.querySelector('.duty-date');
+				
+				// Add input handlers
+				if (dutyNumberInput) {
+					console.log("Adding event listener to first row duty number");
+					// Remove any existing listeners (just in case)
+					const newDutyInput = dutyNumberInput.cloneNode(true);
+					dutyNumberInput.parentNode.replaceChild(newDutyInput, dutyNumberInput);
+					
+					// Add fresh event listener
+					newDutyInput.addEventListener('input', function() {
+						console.log("First row duty number changed");
+						updateDutyInfo(firstRow);
+					});
+				}
+				
+				if (dateInput) {
+					console.log("Adding event listener to first row date");
+					// Remove any existing listeners
+					const newDateInput = dateInput.cloneNode(true);
+					dateInput.parentNode.replaceChild(newDateInput, dateInput);
+					
+					// Add fresh event listener
+					newDateInput.addEventListener('input', function() {
+						console.log("First row date changed");
+						updateDutyInfo(firstRow);
+					});
+				}
+				
+				console.log("First row initialization completed");
 			}
 
             // Function to get duty info for a specific date and duty number
@@ -2090,18 +2135,18 @@
                 }
             }
 
-			function updateDutyInfo(row) {
-				const existingInfo = row.querySelector('.duty-info');
-				if (existingInfo) existingInfo.remove();
+            function updateDutyInfo(row) {
+                const existingInfo = row.querySelector('.duty-info');
+                if (existingInfo) existingInfo.remove();
 
-				const dutyNumber = row.querySelector('.duty-number').value;
-				const dateInput = row.querySelector('.duty-date');
-				if (!dutyNumber || !dateInput.value) return;
+                const dutyNumber = row.querySelector('.duty-number').value;
+                const dateInput = row.querySelector('.duty-date');
+                if (!dutyNumber || !dateInput.value) return;
 
-				const versions = getDutyForDate(dutyNumber, dateInput.value);
-				if (versions.length > 0) {
-					const dutyId = versions[0].dutyId;
-					const parts = dutyId.split('-');
+                const versions = getDutyForDate(dutyNumber, dateInput.value);
+                if (versions.length > 0) {
+                    const dutyId = versions[0].dutyId;
+                    const parts = dutyId.split('-');
 					const infoSpan = document.createElement('span');
 					infoSpan.className = 'duty-info';
 					infoSpan.style.color = `var(--${versions[0].type}-color)`;
@@ -2116,38 +2161,9 @@
 						resultDiv.innerHTML = formatDutyDetails(versions[0].duty, versions[0].dutyId, versions[0]);
 						document.getElementById('manualDutyNumber').scrollIntoView({ behavior: 'smooth' });
 					};
-					row.appendChild(infoSpan);
-				}
-			}
-
-			// Initialize the first row's duty info after page load
-			window.addEventListener('load', function() {
-				// Initialize the first row that exists on page load
-				const firstRow = document.querySelector('.duty-row');
-				if (!firstRow) return;
-				
-				// Add input event listeners to the first row's inputs
-				const dutyNumberInput = firstRow.querySelector('.duty-number');
-				const dateInput = firstRow.querySelector('.duty-date');
-				
-				if (dutyNumberInput) {
-					dutyNumberInput.addEventListener('input', function() {
-						updateDutyInfo(firstRow);
-					});
-				}
-				
-				if (dateInput) {
-					dateInput.addEventListener('input', function() {
-						updateDutyInfo(firstRow);
-					});
-				}
-				
-				// If both fields have values, update info immediately
-				if (dutyNumberInput && dutyNumberInput.value && 
-					dateInput && dateInput.value) {
-					updateDutyInfo(firstRow);
-				}
-			});
+                    row.appendChild(infoSpan);
+                }
+            }
 
             function generateICS() {
                 const rows = document.getElementsByClassName('duty-row');
