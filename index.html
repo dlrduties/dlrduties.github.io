@@ -637,7 +637,16 @@
                         <button onclick="addDutyRow()">Add Row</button>
                         <button onclick="generateICS()">Generate ICS</button>
                     </div>
-                    
+         
+					<style>
+					@keyframes gradientCycle {
+						0% { background-position: 150% 0%, 0% 50%; }
+						33% { background-position: 100% 100%, 50% 50%; }
+						66% { background-position: 50% 50%, 100% 0%; }
+						100% { background-position: 0% 0%, 150% 50%; }
+					}
+					</style>
+		 
                     <pre id="output"></pre>
                     
 						<a href="#" onclick="signOut(); return false;" style="display: block; margin-top: 20px;">Sign Out</a>										
