@@ -644,21 +644,29 @@
 						<div id="aboutSection" style="margin-top: 20px;">
                         <a href="#" id="aboutLink" onclick="toggleAboutSection(); return false;">About this tool</a>
 						<div id="aboutText" style="display: none;">
-							Created by Omari A.<br><br>
-							This tool (currently in beta) is designed to extract duty information from 
-							<span style="background-color: #333; padding: 3px 6px; border-radius: 4px; font-family: monospace; color: #ffffff;">.JSON</span> 
-							files that I create.<br><br>
+						Created by <span style="background: linear-gradient(to right, 
+										hsl(300, 80%, 70%), 
+										hsl(270, 80%, 61%), 
+										hsl(235, 85%, 55%), 
+										hsl(300, 80%, 70%)); 
+									  background-size: 300% 300%; 
+									  -webkit-background-clip: text; 
+									  color: transparent; 
+									  font-weight: bold; 
+									  animation: gradientCycle 5s linear infinite;">
+									  Omari A.</span> 🏳️‍🌈<br><br>
+							This tool is designed to assist in the organization of DLR duties.<br><br>
 
-							It allows for quick duty lookups and the generation of 
+							It allows for quick lookup of duty info, and enables the generation of 
 							<span style="background-color: #333; padding: 3px 6px; border-radius: 4px; font-family: monospace; color: #ffffff;">.ICS</span> 
-							files, which can be imported into an Outlook calendar. Please note that there may be unknown issues, and 
+							files, which can be imported into an Outlook/Google calendar. Please note that there may be unknown issues with this tool, and 
 							<b>no liability is taken for any incorrect information displayed or generated.</b><br><br>
 
-							This tool utilizes two types of 
-							<span style="background-color: #333; padding: 3px 6px; border-radius: 4px; font-family: monospace; color: #ffffff;">.JSON</span> files:<br><br>
+							This tool interprets two types of duties:<br><br>
 
-							<b style="color: var(--base-color);">Base files</b>: Contain the core Monday-to-Sunday duties corresponding to the current DLR timetable.<br><br>
-							<b style="color: var(--temp-color);">Temp files</b>: Contain duties in effect during periods of modified working (e.g., weekend engineering works).
+							<b style="color: var(--base-color);">Base Duties</b>: These are the core Monday-to-Sunday duties corresponding to the current DLR timetable.<br>
+							<b style="color: var(--temp-color);">Tempoary Duties</b>: These are duties in effect during periods of modified working (e.g., weekend engineering works).<br><br>
+							Tempoary Duties for up to 21 days from the current date are avalible in this tool.
 						</div>
                     </div>
                 </div>
