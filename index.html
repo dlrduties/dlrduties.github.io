@@ -1188,86 +1188,102 @@
 						rangeTemp: []
 					};
 					
-					loadingStatus.textContent = 'Fetching latest duty data...';
+					loadingStatus.textContent = 'Authenticating...';
 					loadingBar.style.width = '0%';
 					
-					// Reference to your storage bucket's duty-files folder
-					const storageRef = firebase.storage().ref('duty-files');
+					// Get credentials from the login form
+					const email = document.getElementById('emailInput').value;
+					const password = document.getElementById('passwordInput').value;
 					
-					// List all files in the storage
-					storageRef.listAll()
-						.then((result) => {
-							totalFiles = result.items.length;
+					// Authenticate first, then fetch data
+					firebase.auth().signInWithEmailAndPassword(email, password)
+						.then(() => {
+							loadingStatus.textContent = 'Fetching latest duty data...';
 							
-							if (totalFiles === 0) {
-								loadingStatus.textContent = 'No duty files found. Please contact administrator.';
-								return;
-							}
+							// Reference to your storage bucket's duty-files folder
+							const storageRef = firebase.storage().ref('duty-files');
 							
-							loadingStatus.textContent = `Loading ${totalFiles} duty files...`;
-							
-							// Process each file
-							result.items.forEach((fileRef) => {
-								fileRef.getDownloadURL()
-									.then((url) => {
-										// Fetch the file content
-										fetch(url)
-											.then(response => response.text())
-											.then(content => {
-												try {
-													// Parse JSON from the file
-													const jsonMatch = content.match(/var\s+ExtractedDuties\s*=\s*(\{.*\});/s);
-													if (jsonMatch) {
-														const duties = JSON.parse(jsonMatch[1]);
-														processDutyFile(fileRef.name, duties);
-														loadingStatus.textContent = `Processed ${fileRef.name} (${filesLoaded+1}/${totalFiles})`;
-													} else {
-														console.error('JSON pattern not found in file:', fileRef.name);
-													}
-												} catch (error) {
-													console.error('Error processing file:', fileRef.name, error);
-													loadingStatus.textContent = `Error in file ${fileRef.name}: ${error.message}`;
-												}
-												
-												// Update loading progress
-												filesLoaded++;
-												loadingBar.style.width = `${Math.round((filesLoaded / totalFiles) * 100)}%`;
-												
-												// If all files are loaded, cache and continue to main app
-												if (filesLoaded === totalFiles) {
-													// Cache the data
-													try {
-														localStorage.setItem('dutyData', JSON.stringify(dutyData));
-														localStorage.setItem('dutyDataLastUpdated', currentTime.toString());
-														loadingStatus.textContent = `All files loaded and cached successfully!`;
-													} catch (e) {
-														console.error('Error caching data:', e);
-														loadingStatus.textContent = `All files loaded but couldn't cache (${e.message})`;
-													}
-													
-													setTimeout(() => {
-														continueToDutyTool();
-													}, 1000);
-												}
+							// List all files in the storage
+							storageRef.listAll()
+								.then((result) => {
+									totalFiles = result.items.length;
+									
+									if (totalFiles === 0) {
+										loadingStatus.textContent = 'No duty files found. Please contact administrator.';
+										return;
+									}
+									
+									loadingStatus.textContent = `Loading ${totalFiles} duty files...`;
+									
+									// Process each file
+									result.items.forEach((fileRef) => {
+										fileRef.getDownloadURL()
+											.then((url) => {
+												// Fetch the file content
+												fetch(url)
+													.then(response => response.text())
+													.then(content => {
+														try {
+															// Parse JSON from the file
+															const jsonMatch = content.match(/var\s+ExtractedDuties\s*=\s*(\{.*\});/s);
+															if (jsonMatch) {
+																const duties = JSON.parse(jsonMatch[1]);
+																processDutyFile(fileRef.name, duties);
+																loadingStatus.textContent = `Processed ${fileRef.name} (${filesLoaded+1}/${totalFiles})`;
+															} else {
+																console.error('JSON pattern not found in file:', fileRef.name);
+															}
+														} catch (error) {
+															console.error('Error processing file:', fileRef.name, error);
+															loadingStatus.textContent = `Error in file ${fileRef.name}: ${error.message}`;
+														}
+														
+														// Update loading progress
+														filesLoaded++;
+														loadingBar.style.width = `${Math.round((filesLoaded / totalFiles) * 100)}%`;
+														
+														// If all files are loaded, cache and continue to main app
+														if (filesLoaded === totalFiles) {
+															// Cache the data
+															try {
+																localStorage.setItem('dutyData', JSON.stringify(dutyData));
+																localStorage.setItem('dutyDataLastUpdated', new Date().getTime().toString());
+																loadingStatus.textContent = `All files loaded and cached successfully!`;
+															} catch (e) {
+																console.error('Error caching data:', e);
+																loadingStatus.textContent = `All files loaded but couldn't cache (${e.message})`;
+															}
+															
+															setTimeout(() => {
+																continueToDutyTool();
+															}, 1000);
+														}
+													})
+													.catch((error) => {
+														console.error('Error downloading content for file:', fileRef.name, error);
+														filesLoaded++;
+														loadingStatus.textContent = `Error loading ${fileRef.name}: ${error.message}`;
+														loadingBar.style.width = `${Math.round((filesLoaded / totalFiles) * 100)}%`;
+													});
 											})
 											.catch((error) => {
-												console.error('Error downloading content for file:', fileRef.name, error);
+												console.error('Error getting download URL for file:', fileRef.name, error);
 												filesLoaded++;
-												loadingStatus.textContent = `Error loading ${fileRef.name}: ${error.message}`;
+												loadingStatus.textContent = `Error accessing ${fileRef.name}: ${error.message}`;
 												loadingBar.style.width = `${Math.round((filesLoaded / totalFiles) * 100)}%`;
 											});
-									})
-									.catch((error) => {
-										console.error('Error getting download URL for file:', fileRef.name, error);
-										filesLoaded++;
-										loadingStatus.textContent = `Error accessing ${fileRef.name}: ${error.message}`;
-										loadingBar.style.width = `${Math.round((filesLoaded / totalFiles) * 100)}%`;
 									});
-							});
+								})
+								.catch((error) => {
+									loadingStatus.textContent = `Error: ${error.message}`;
+									console.error('Error listing files:', error);
+								});
 						})
 						.catch((error) => {
-							loadingStatus.textContent = `Error: ${error.message}`;
-							console.error('Error listing files:', error);
+							loadingStatus.textContent = `Authentication failed: ${error.message}`;
+							console.error('Authentication error:', error);
+							// Re-enable login button
+							document.getElementById('loginButton').disabled = false;
 						});
 				}
 			}
