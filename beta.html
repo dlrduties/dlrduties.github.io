@@ -33,6 +33,7 @@
         h2 {
             font-size: 24px;
             margin-top: 40px;
+            margin-bottom: 16px;
         }
 
         a {
@@ -41,7 +42,7 @@
         }
 
         input, button {
-            height: 36px;
+            height: 44px;
             background-color: #1e1e1e;
             color: #ffffff;
             border: 1px solid #424242;
@@ -69,6 +70,7 @@
 
         input:not(.duty-type):not(.duty-number) {
             text-align: center;
+            padding: 0 12px;
         }
 
         input::placeholder {
@@ -118,14 +120,15 @@
             font-size: 24px;
         }
 
-        /* Loading indicator */
+        /* Loading overlay */
         .loading-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(18, 18, 18, 0.9);
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(8px);
             display: none;
             flex-direction: column;
             align-items: center;
@@ -140,19 +143,47 @@
         .loading-text {
             color: #1e88e5;
             font-size: 18px;
-            margin-bottom: 20px;
+            margin-top: 20px;
         }
 
-        /* Input section */
+        .simple-loader {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #1e88e5;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Input sections */
+        .input-section {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
         .input-row {
             display: flex;
             gap: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             align-items: center;
         }
 
         .input-row input {
             flex: 1;
+        }
+
+        .helper-text {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 12px;
+            text-align: center;
         }
 
         /* Duty table */
@@ -180,21 +211,20 @@
         }
 
         .duty-date {
-            width: 120px;
+            width: 140px;
         }
 
         .duty-info {
-            color: #666;
-            max-width: 80px;
+            color: #1e88e5;
             font-size: 12px;
-            margin-right: 24px;
             white-space: nowrap;
-            order: -1;
             cursor: pointer;
+            flex: 1;
+            margin-right: 8px;
         }
 
         .duty-info:hover {
-            color: #1e88e5;
+            text-decoration: underline;
         }
 
         .row-button {
@@ -203,12 +233,11 @@
             cursor: pointer;
             font-size: 22px;
             padding: 0;
-            width: 24px;
-            height: 36px;
+            width: 32px;
+            height: 44px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-left: 4px;
         }
 
         .remove-row {
@@ -220,55 +249,116 @@
             font-size: 18px;
         }
 
-        /* Lookup result */
-        .lookup-result {
+        /* Lookup cards */
+        .lookup-card {
             background-color: #1e1e1e;
             border: 1px solid #424242;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            overflow: hidden;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        .lookup-header {
-            background-color: #1e88e5;
-            color: white;
-            padding: 12px;
+        .lookup-card:hover {
+            background-color: rgba(30, 136, 229, 0.1);
+            border-color: #1e88e5;
+        }
+
+        .lookup-card-header {
             font-size: 18px;
-            font-weight: bold;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .lookup-card-details {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .lookup-error {
+            color: #e53935;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        /* Duty modal */
+        .duty-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+        }
+
+        .duty-modal.is-visible {
+            visibility: visible;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .duty-modal-content {
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .duty-modal.is-visible .duty-modal-content {
+            transform: scale(1);
+        }
+
+        .duty-modal-header {
+            background: linear-gradient(90deg, #1e88e5, #1565c0);
+            color: white;
+            padding: 16px 20px;
+            font-size: 18px;
+            font-weight: 600;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .lookup-header-details {
-            font-size: 14px;
-            font-weight: normal;
-        }
-
-        .lookup-close {
+        .close-modal {
             background: none;
             border: none;
             color: white;
-            font-size: 24px;
             cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 28px;
+            padding: 4px 8px;
+            line-height: 1;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
         }
 
-        .lookup-close:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        .lookup-body {
-            padding: 16px;
+        .duty-modal-body {
+            padding: 20px;
+            max-height: calc(80vh - 64px);
+            overflow-y: auto;
         }
 
-        .lookup-section {
+        .section {
             margin-bottom: 20px;
         }
 
@@ -277,35 +367,18 @@
             color: #1e88e5;
             margin-bottom: 8px;
             padding-bottom: 4px;
-            border-bottom: 1px solid #424242;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .section-time {
-            color: #888;
-            font-size: 14px;
-        }
-
-        .section-content {
-            margin-left: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .section-item {
-            margin-bottom: 4px;
+            margin-bottom: 8px;
             display: flex;
-            gap: 8px;
+            gap: 12px;
         }
 
         .section-label {
             color: #888;
-            min-width: 80px;
-        }
-
-        .section-spare {
-            font-style: italic;
-            color: #888;
-            margin-left: 16px;
+            min-width: 100px;
         }
 
         .button-group {
@@ -314,117 +387,82 @@
             margin-top: 16px;
         }
 
-        .duty-number-lookup {
-            width: 246px;
-            background-color: #1e1e1e;
-            color: #ffffff;
-            border: 1px solid #424242;
-            border-radius: 5px;
-            height: 36px;
-            box-sizing: border-box;
-        }
-
         @media (max-width: 600px) {
             body {
-                padding: 8px;
-            }
-
-            .container {
-                width: 100%;
-                padding: 0;
+                padding: 12px;
             }
 
             h1 {
-                font-size: 20px;
+                font-size: 24px;
             }
 
             h2 {
-                font-size: 18px;
+                font-size: 20px;
+            }
+
+            input, button {
+                height: 48px;
+            }
+
+            .input-section {
+                padding: 16px;
+            }
+
+            .input-row {
+                flex-direction: column;
+            }
+
+            .input-row input {
+                width: 100%;
             }
 
             .duty-row {
-                display: flex;
-                align-items: center;
-                flex-wrap: nowrap;
-                position: relative;
-                gap: 4px;
-                margin-bottom: 8px;
-            }
-
-            .duty-info {
-                position: absolute;
-                left: 245px;
-                width: auto;
-                text-align: right;
-                font-size: 12px;
-                padding: 0;
-                margin: 0;
-                order: -1;
-                cursor: pointer;
+                gap: 6px;
             }
 
             .duty-type, .duty-number {
-                width: 55px;
+                width: 50px;
+                font-size: 13px;
             }
 
             .duty-date {
-                max-width: 125px;
+                width: 100%;
+                max-width: 140px;
+            }
+
+            .duty-info {
+                font-size: 11px;
+                margin-right: 4px;
+            }
+
+            .row-button {
+                width: 36px;
+                height: 48px;
             }
 
             .button-group {
                 flex-direction: column;
             }
 
-            button {
+            .button-group button {
                 width: 100%;
             }
 
-            .lookup-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
+            .duty-modal {
+                padding: 1rem;
             }
 
-            .lookup-header-details {
-                width: 100%;
-                text-align: left;
+            .duty-modal-body {
+                padding: 16px;
             }
 
             .section-item {
                 flex-direction: column;
-                gap: 2px;
+                gap: 4px;
             }
 
             .section-label {
                 min-width: auto;
-            }
-
-            .remove-row {
-                position: absolute;
-                right: 0px;
-                top: 40%;
-                transform: translateY(-50%);
-                font-size: 38px;
-                width: 32px;
-                height: 32px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background-color: transparent;
-                color: #ff4444;
-                border: none;
-                cursor: pointer;
-                z-index: 1;
-                pointer-events: auto;
-            }
-
-            .input-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .input-row input {
-                width: 100%;
             }
         }
     </style>
@@ -448,6 +486,7 @@
 
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
+        <div class="simple-loader"></div>
         <div class="loading-text">Loading duty data...</div>
     </div>
 
@@ -456,18 +495,18 @@
         <h1>OwnGOAL Beta</h1>
 
         <!-- Auto Calendar Builder -->
-        <h2 style="margin-top: 20px;">Auto Calendar Builder</h2>
-        <div class="input-row">
-            <input type="text" id="employeeNumber" placeholder="Employee Number (6 digits)" maxlength="6" pattern="\d{6}">
+        <h2>Auto Calendar Builder</h2>
+        <div class="input-section">
+            <input type="text" id="employeeNumber" placeholder="Employee Number (e.g. 300123)" maxlength="6" pattern="\d{6}" style="width: 100%; margin-bottom: 12px;">
+            <div class="helper-text">Select date range (available: -7 to +21 days from today)</div>
+            <div class="input-row">
+                <input type="date" id="fromDate">
+                <input type="date" id="toDate">
+            </div>
+            <button onclick="loadDuties()" id="loadButton" style="width: 100%; margin-top: 8px;">Load Duties</button>
         </div>
-        <div class="input-row">
-            <input type="date" id="fromDate">
-            <input type="date" id="toDate">
-        </div>
-        <button onclick="loadDuties()" id="loadButton" style="width: 100%;">Load Duties</button>
 
         <div id="dutyTableSection" style="display: none;">
-            <div id="lookupResult"></div>
             <div id="icsBuilderRows" class="duty-rows"></div>
             <div class="button-group">
                 <button onclick="generateICS()">Download ICS</button>
@@ -476,11 +515,24 @@
 
         <!-- Manual Lookup -->
         <h2>Manual Duty Lookup</h2>
-        <input type="text" id="manualDutyNumber" placeholder="Enter duty number" 
-               class="duty-number-lookup" oninput="lookupDuty()">
-        <div id="manualLookupResult"></div>
+        <div class="input-section">
+            <input type="text" id="manualDutyNumber" placeholder="Enter duty number (e.g. 123)" 
+                   style="width: 100%;" oninput="lookupDuty()">
+            <div id="manualLookupResult"></div>
+        </div>
 
         <a href="#" onclick="signOut(); return false;" style="display: block; margin-top: 40px;">Sign Out</a>
+    </div>
+
+    <!-- Duty Modal -->
+    <div class="duty-modal" id="dutyModal">
+        <div class="duty-modal-content">
+            <div class="duty-modal-header">
+                <span id="modalTitle">Duty Details</span>
+                <button class="close-modal" onclick="closeDutyModal()">×</button>
+            </div>
+            <div class="duty-modal-body" id="modalBody"></div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
@@ -605,7 +657,6 @@
                 const response = await fetch(url);
                 const compressedData = await response.arrayBuffer();
                 
-                // Decompress
                 const decompressed = pako.ungzip(new Uint8Array(compressedData), { to: 'string' });
                 globalDuties = JSON.parse(decompressed);
                 
@@ -645,7 +696,6 @@
                 return;
             }
 
-            // Filter duties by employee number and date range
             const matchedDuties = [];
             for (const [date, duties] of Object.entries(globalDuties)) {
                 if (date >= fromDate && date <= toDate) {
@@ -660,7 +710,6 @@
             matchedDuties.sort((a, b) => new Date(a.date) - new Date(b.date));
             populateDutyTable(matchedDuties);
             document.getElementById('dutyTableSection').style.display = 'block';
-            document.getElementById('dutyTableSection').scrollIntoView({ behavior: 'smooth' });
         }
 
         function populateDutyTable(matchedDuties) {
@@ -765,7 +814,6 @@
                     const dayAfterCurrent = new Date(current);
                     dayAfterCurrent.setDate(current.getDate() + 1);
                     
-                    // If next date is exactly one day after current, leave blank
                     if (formatDateForInput(dayAfterCurrent) === nextDate) {
                         newDate = '';
                     } else {
@@ -805,7 +853,7 @@
                 if (dutyKey) {
                     const parts = dutyKey.split('-');
                     infoSpan.textContent = `${parts[1]} ${parts[3]}-${parts[4]}`;
-                    infoSpan.onclick = () => showDutyDetails(dateValue, dutyKey);
+                    infoSpan.onclick = () => showDutyModal(dateValue, dutyKey);
                 } else {
                     infoSpan.textContent = '';
                     infoSpan.onclick = null;
@@ -814,169 +862,6 @@
                 infoSpan.textContent = '';
                 infoSpan.onclick = null;
             }
-        }
-
-        function showDutyDetails(date, dutyKey) {
-            const duty = globalDuties[date][dutyKey];
-            if (!duty) return;
-
-            const resultDiv = document.getElementById('lookupResult');
-            resultDiv.innerHTML = formatDutyDetails(duty, dutyKey);
-            resultDiv.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function closeDutyPreview() {
-            document.getElementById('lookupResult').innerHTML = '';
-        }
-
-        function formatDutyDetails(duty, dutyId) {
-            const [number, location, endLocation, startTime, endTime] = dutyId.split('-');
-
-            let content = `
-                <div class="lookup-result">
-                    <div class="lookup-header">
-                        <div>
-                            <div>Duty ${number}: ${location} ${startTime}-${endTime}</div>
-                            <div class="lookup-header-details">
-                                Type: ${duty.TypeOfDuty} | Spread: ${duty.Spreadtime} | Paid: ${duty.PaidTime}
-                            </div>
-                        </div>
-                        <button class="lookup-close" onclick="closeDutyPreview()">×</button>
-                    </div>
-                    <div class="lookup-body">
-                        <div class="lookup-section">
-                            <div class="section-item">
-                                <span class="section-label">Book on:</span>
-                                <span>${startTime}${location ? ` at ${location}` : ''}</span>
-                            </div>
-                        </div>
-            `;
-
-            if (duty.TypeOfDuty === "SPARE" || duty.TypeOfDuty === "TRAINING" || duty.TypeOfDuty === "PANEL") {
-                content += `
-                    <div class="lookup-section">
-                        <div class="section-header">Duty Details</div>
-                        <div class="section-spare">${duty.TypeOfDuty}</div>
-                    </div>`;
-            } else {
-                content += `
-                    <div class="lookup-section">
-                        <div class="section-header">
-                            <span>First Half</span>
-                            <span class="section-time">${duty.FirstHalfLength}</span>
-                        </div>`;
-
-                if (duty.FirstHalfRunNumber === "" || duty.FirstHalfRunNumber === "TR") {
-                    content += `<div class="section-spare">${duty.TypeOfDuty}</div>`;
-                } else {
-                    content += `
-                        <div class="section-content">
-                            <div class="section-item">
-                                <span class="section-label">Run:</span>
-                                <span>${duty.FirstHalfRunNumber}</span>
-                            </div>
-                            <div class="section-item">
-                                <span class="section-label">Pick up:</span>
-                                <span>${duty.FirstHalfStartLocation} at ${duty.FirstHalfStartTime}</span>
-                            </div>
-                            <div class="section-item">
-                                <span class="section-label">Relieved:</span>
-                                <span>${duty.FirstHalfEndLocation} at ${duty.FirstHalfEndTime}</span>
-                            </div>
-                        </div>`;
-                }
-                content += `</div>`;
-
-                if (duty.FirstHalfEndTime && duty.SecondHalfStartTime) {
-                    content += `
-                        <div class="lookup-section">
-                            <div class="section-header">Break Details</div>
-                            <div class="section-content">
-                                <div class="section-item">
-                                    <span class="section-label">Duration:</span>
-                                    <span>${calculateBreakDetails(duty)}</span>
-                                </div>
-                            </div>
-                        </div>`;
-                }
-
-                content += `
-                    <div class="lookup-section">
-                        <div class="section-header">
-                            <span>Second Half</span>
-                            <span class="section-time">${duty.SecondHalfLength}</span>
-                        </div>`;
-
-                if (duty.SecondHalfRunNumber === "" || duty.SecondHalfRunNumber === "TR") {
-                    content += `<div class="section-spare">${duty.TypeOfDuty}</div>`;
-                } else {
-                    content += `
-                        <div class="section-content">
-                            <div class="section-item">
-                                <span class="section-label">Run:</span>
-                                <span>${duty.SecondHalfRunNumber}</span>
-                            </div>
-                            <div class="section-item">
-                                <span class="section-label">Pick up:</span>
-                                <span>${duty.SecondHalfStartLocation} at ${duty.SecondHalfStartTime}</span>
-                            </div>
-                            <div class="section-item">
-                                <span class="section-label">Relieved:</span>
-                                <span>${duty.SecondHalfEndLocation} at ${duty.SecondHalfEndTime}</span>
-                            </div>
-                        </div>`;
-                }
-                content += `</div>`;
-            }
-
-            content += `
-                <div class="lookup-section">
-                    <div class="section-item">
-                        <span class="section-label">Book off:</span>
-                        <span>${endTime}${endLocation ? ` at ${endLocation}` : ''}</span>
-                    </div>
-                </div>
-            </div>
-            </div>`;
-
-            return content;
-        }
-
-        function calculateBreakDetails(duty) {
-            if (!duty.FirstHalfEndTime || !duty.SecondHalfStartTime) return "N/A";
-
-            const [breakHours, breakMins] = calculateTimeDifference(
-                duty.FirstHalfEndTime,
-                duty.SecondHalfStartTime
-            ).split(':').map(Number);
-
-            const [mealHours, mealMins] = duty.MealBreakDuration.split(':').map(Number);
-            
-            const totalBreakMins = (breakHours * 60 + breakMins);
-            const mealBreakMins = (mealHours * 60 + mealMins);
-            const paidBreakMins = totalBreakMins - mealBreakMins;
-            
-            const paidHours = Math.floor(paidBreakMins / 60);
-            const paidMins = paidBreakMins % 60;
-            const paidBreak = `${paidHours.toString().padStart(2, '0')}:${paidMins.toString().padStart(2, '0')}`;
-
-            return `${formatTime(breakHours, breakMins)} (${duty.MealBreakDuration} unpaid + ${paidBreak} paid)`;
-        }
-
-        function calculateTimeDifference(time1, time2) {
-            const [h1, m1] = time1.split(':').map(Number);
-            const [h2, m2] = time2.split(':').map(Number);
-            
-            let diffMinutes = (h2 * 60 + m2) - (h1 * 60 + m1);
-            if (diffMinutes < 0) diffMinutes += 24 * 60;
-            
-            const hours = Math.floor(diffMinutes / 60);
-            const minutes = diffMinutes % 60;
-            return formatTime(hours, minutes);
-        }
-
-        function formatTime(hours, minutes) {
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
         }
 
         // Manual lookup
@@ -999,17 +884,31 @@
             }
 
             if (foundDuties.length === 0) {
-                resultDiv.innerHTML = '<div style="color: #e53935; margin-top: 10px;">Duty not found</div>';
+                resultDiv.innerHTML = '<div class="lookup-error">Duty not found</div>';
                 return;
             }
 
             const groups = groupIdenticalDuties(foundDuties);
+            let html = '';
 
-            if (groups.length === 1) {
-                resultDiv.innerHTML = formatDutyDetails(groups[0].duties[0].duty, groups[0].duties[0].key);
-            } else {
-                resultDiv.innerHTML = formatMultipleVersions(dutyNumber, groups);
-            }
+            groups.forEach(group => {
+                const firstDuty = group.duties[0];
+                const parts = firstDuty.key.split('-');
+                const location = parts[1] || 'Unknown';
+                const startTime = parts[3] || '??:??';
+                const endTime = parts[4] || '??:??';
+                const dates = group.duties.map(d => d.date).sort();
+                const dateText = formatDateList(dates);
+
+                html += `
+                    <div class="lookup-card" onclick="showDutyModal('${firstDuty.date}', '${firstDuty.key}')">
+                        <div class="lookup-card-header">Duty ${dutyNumber}: ${location} ${startTime}-${endTime}</div>
+                        <div class="lookup-card-details">Appears on: ${dateText}</div>
+                    </div>
+                `;
+            });
+
+            resultDiv.innerHTML = html;
         }
 
         function groupIdenticalDuties(foundDuties) {
@@ -1041,46 +940,6 @@
             ];
             
             return keyFields.every(field => duty1[field] === duty2[field]);
-        }
-
-        function formatMultipleVersions(dutyNumber, groups) {
-            let content = `
-                <div class="lookup-result">
-                    <div class="lookup-header">
-                        <div>Duty ${dutyNumber}: Multiple Versions Found</div>
-                        <button class="lookup-close" onclick="document.getElementById('manualLookupResult').innerHTML = ''">×</button>
-                    </div>
-                    <div style="padding: 16px;">`;
-
-            groups.forEach((group) => {
-                const firstDuty = group.duties[0];
-                const parts = firstDuty.key.split('-');
-                const location = parts[1] || 'Unknown';
-                const startTime = parts[3] || '??:??';
-                const endTime = parts[4] || '??:??';
-
-                const dates = group.duties.map(d => d.date).sort();
-                const dateText = formatDateList(dates);
-
-                content += `
-                    <div onclick="showDutyDetails('${firstDuty.date}', '${firstDuty.key}')" style="
-                        padding: 10px; 
-                        border: 1px solid #424242; 
-                        margin: 8px 0; 
-                        border-radius: 5px; 
-                        cursor: pointer;
-                        background-color: #1e1e1e;
-                    ">
-                        <div style="font-weight: bold; font-size: 16px;">${location} ${startTime}-${endTime}</div>
-                        <div style="color: #666; font-size: 12px; margin-top: 4px;">Appears on: ${dateText}</div>
-                    </div>`;
-            });
-
-            content += `
-                    </div>
-                </div>`;
-
-            return content;
         }
 
         function formatDateList(dates) {
@@ -1125,7 +984,169 @@
             return `${day}/${month}/${year}`;
         }
 
-        // ICS Generation
+        // Show duty modal
+        function showDutyModal(date, dutyKey) {
+            const modal = document.getElementById('dutyModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalBody = document.getElementById('modalBody');
+            
+            const duty = globalDuties[date][dutyKey];
+            const [number, location, endLocation, startTime, endTime] = dutyKey.split('-');
+            
+            modalTitle.textContent = `Duty ${number}: ${location} ${startTime}-${endTime}`;
+            
+            let content = `
+                <div class="section">
+                    <div class="section-item">
+                        <span class="section-label">Type:</span>
+                        <span>${duty.TypeOfDuty}</span>
+                    </div>
+                    <div class="section-item">
+                        <span class="section-label">Spread:</span>
+                        <span>${duty.Spreadtime}</span>
+                    </div>
+                    <div class="section-item">
+                        <span class="section-label">Paid:</span>
+                        <span>${duty.PaidTime}</span>
+                    </div>
+                    <div class="section-item">
+                        <span class="section-label">Book on:</span>
+                        <span>${startTime}${location ? ` at ${location}` : ''}</span>
+                    </div>
+                </div>
+            `;
+
+            if (duty.TypeOfDuty === "SPARE" || duty.TypeOfDuty === "TRAINING" || duty.TypeOfDuty === "PANEL") {
+                content += `
+                    <div class="section">
+                        <div class="section-header">Duty Details</div>
+                        <div style="margin-left: 16px; font-style: italic; color: #888;">${duty.TypeOfDuty}</div>
+                    </div>`;
+            } else {
+                content += `
+                    <div class="section">
+                        <div class="section-header">First Half (${duty.FirstHalfLength})</div>`;
+                
+                if (duty.FirstHalfRunNumber === "" || duty.FirstHalfRunNumber === "TR") {
+                    content += `<div style="margin-left: 16px; font-style: italic; color: #888;">${duty.TypeOfDuty}</div>`;
+                } else {
+                    content += `
+                        <div style="margin-left: 16px;">
+                            <div class="section-item">
+                                <span class="section-label">Run:</span>
+                                <span>${duty.FirstHalfRunNumber}</span>
+                            </div>
+                            <div class="section-item">
+                                <span class="section-label">Pick up:</span>
+                                <span>${duty.FirstHalfStartLocation} at ${duty.FirstHalfStartTime}</span>
+                            </div>
+                            <div class="section-item">
+                                <span class="section-label">Relieved:</span>
+                                <span>${duty.FirstHalfEndLocation} at ${duty.FirstHalfEndTime}</span>
+                            </div>
+                        </div>`;
+                }
+                content += `</div>`;
+
+                if (duty.FirstHalfEndTime && duty.SecondHalfStartTime) {
+                    content += `
+                        <div class="section">
+                            <div class="section-header">Break Details</div>
+                            <div class="section-item">
+                                <span class="section-label">Duration:</span>
+                                <span>${calculateBreakDetails(duty)}</span>
+                            </div>
+                        </div>`;
+                }
+
+                content += `
+                    <div class="section">
+                        <div class="section-header">Second Half (${duty.SecondHalfLength})</div>`;
+                
+                if (duty.SecondHalfRunNumber === "" || duty.SecondHalfRunNumber === "TR") {
+                    content += `<div style="margin-left: 16px; font-style: italic; color: #888;">${duty.TypeOfDuty}</div>`;
+                } else {
+                    content += `
+                        <div style="margin-left: 16px;">
+                            <div class="section-item">
+                                <span class="section-label">Run:</span>
+                                <span>${duty.SecondHalfRunNumber}</span>
+                            </div>
+                            <div class="section-item">
+                                <span class="section-label">Pick up:</span>
+                                <span>${duty.SecondHalfStartLocation} at ${duty.SecondHalfStartTime}</span>
+                            </div>
+                            <div class="section-item">
+                                <span class="section-label">Relieved:</span>
+                                <span>${duty.SecondHalfEndLocation} at ${duty.SecondHalfEndTime}</span>
+                            </div>
+                        </div>`;
+                }
+                content += `</div>`;
+            }
+
+            content += `
+                <div class="section">
+                    <div class="section-item">
+                        <span class="section-label">Book off:</span>
+                        <span>${endTime}${endLocation ? ` at ${endLocation}` : ''}</span>
+                    </div>
+                </div>`;
+
+            modalBody.innerHTML = content;
+            modal.classList.add('is-visible');
+        }
+
+        function closeDutyModal() {
+            const modal = document.getElementById('dutyModal');
+            modal.classList.remove('is-visible');
+        }
+
+        function calculateBreakDetails(duty) {
+            if (!duty.FirstHalfEndTime || !duty.SecondHalfStartTime) return "N/A";
+
+            const [breakHours, breakMins] = calculateTimeDifference(
+                duty.FirstHalfEndTime,
+                duty.SecondHalfStartTime
+            ).split(':').map(Number);
+
+            const [mealHours, mealMins] = duty.MealBreakDuration.split(':').map(Number);
+            
+            const totalBreakMins = (breakHours * 60 + breakMins);
+            const mealBreakMins = (mealHours * 60 + mealMins);
+            const paidBreakMins = totalBreakMins - mealBreakMins;
+            
+            const paidHours = Math.floor(paidBreakMins / 60);
+            const paidMins = paidBreakMins % 60;
+            const paidBreak = `${paidHours.toString().padStart(2, '0')}:${paidMins.toString().padStart(2, '0')}`;
+
+            return `${formatTime(breakHours, breakMins)} (${duty.MealBreakDuration} unpaid + ${paidBreak} paid)`;
+        }
+
+        function calculateTimeDifference(time1, time2) {
+            const [h1, m1] = time1.split(':').map(Number);
+            const [h2, m2] = time2.split(':').map(Number);
+            
+            let diffMinutes = (h2 * 60 + m2) - (h1 * 60 + m1);
+            if (diffMinutes < 0) diffMinutes += 24 * 60;
+            
+            const hours = Math.floor(diffMinutes / 60);
+            const minutes = diffMinutes % 60;
+            return formatTime(hours, minutes);
+        }
+
+        function formatTime(hours, minutes) {
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('dutyModal').addEventListener('click', (e) => {
+            if (e.target.id === 'dutyModal') {
+                closeDutyModal();
+            }
+        });
+
+        // ICS Generation (keeping existing code)
         function generateICS() {
             const rows = document.querySelectorAll('.duty-row');
             const date = new Date();
