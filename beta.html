@@ -159,6 +159,18 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .button-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
 
         /* Input sections */
         .input-section {
@@ -198,11 +210,21 @@
             margin-bottom: 16px;
             position: relative;
         }
+        
+        .row-buttons {
+            display: flex;
+            gap: 4px;
+            margin-left: auto;
+        }
 
         .duty-type {
             width: 60px;
             text-transform: uppercase;
             text-align: center;
+        }
+        
+        .duty-type::placeholder {
+            text-transform: none;
         }
 
         .duty-number {
@@ -260,6 +282,13 @@
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .lookup-card:hover {
+            background-color: rgba(30, 136, 229, 0.1);
+            border-color: rgba(30, 136, 229, 0.4);
         }
 
         .lookup-card-header {
@@ -272,31 +301,22 @@
         .lookup-card-details {
             font-size: 14px;
             color: #888;
-            margin-bottom: 8px;
+            margin-bottom: 0;
         }
 
         .lookup-card-content {
             background-color: #1a1a1a;
             border-radius: 6px;
-            padding: 16px;
+            padding: 0 16px;
             margin-top: 12px;
-            display: none;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
         }
 
         .lookup-card-content.expanded {
-            display: block;
-        }
-
-        .lookup-toggle {
-            color: #1e88e5;
-            font-size: 13px;
-            cursor: pointer;
-            display: inline-block;
-            margin-top: 4px;
-        }
-
-        .lookup-toggle:hover {
-            text-decoration: underline;
+            max-height: 2000px;
+            padding: 16px;
         }
 
         .lookup-error {
@@ -424,6 +444,11 @@
             input, button {
                 height: 52px;
             }
+            
+            input[type="date"] {
+                min-height: 52px;
+                line-height: normal;
+            }
 
             .input-section {
                 padding: 16px;
@@ -532,7 +557,7 @@
         <div id="dutyTableSection" style="display: none;">
             <div id="icsBuilderRows" class="duty-rows"></div>
             <div class="button-group">
-                <button onclick="generateICS()">Download ICS</button>
+                <button onclick="generateICS()">Download Calendar</button>
             </div>
         </div>
 
@@ -631,7 +656,7 @@
             }
             
             loginButton.disabled = true;
-            loginButton.textContent = 'Signing in...';
+            loginButton.innerHTML = '<span class="button-spinner"></span>Signing in...';
             errorElement.style.display = "none";
             
             firebase.auth().signInWithEmailAndPassword(email, password)
@@ -643,7 +668,7 @@
                     errorElement.textContent = getUserFriendlyAuthError(error);
                     errorElement.style.display = "block";
                     loginButton.disabled = false;
-                    loginButton.textContent = 'Sign In';
+                    loginButton.innerHTML = 'Sign In';
                 });
         }
 
@@ -802,6 +827,11 @@
             const infoSpan = document.createElement('span');
             infoSpan.className = 'duty-info';
 
+            const insertBtn = document.createElement('span');
+            insertBtn.className = 'row-button insert-button';
+            insertBtn.innerHTML = '↓+';
+            insertBtn.onclick = () => insertRowBelow(row);
+
             const removeBtn = document.createElement('span');
             removeBtn.className = 'row-button remove-row';
             removeBtn.innerHTML = '×';
@@ -809,18 +839,17 @@
                 const container = document.getElementById('icsBuilderRows');
                 container.removeChild(row);
             };
-
-            const insertBtn = document.createElement('span');
-            insertBtn.className = 'row-button insert-button';
-            insertBtn.innerHTML = '↓+';
-            insertBtn.onclick = () => insertRowBelow(row);
+            
+            const buttonWrapper = document.createElement('div');
+            buttonWrapper.className = 'row-buttons';
+            buttonWrapper.appendChild(insertBtn);
+            buttonWrapper.appendChild(removeBtn);
 
             row.appendChild(typeInput);
             row.appendChild(numberInput);
             row.appendChild(dateInput);
             row.appendChild(infoSpan);
-            row.appendChild(removeBtn);
-            row.appendChild(insertBtn);
+            row.appendChild(buttonWrapper);
 
             updateDutyInfo(row);
             return row;
@@ -964,10 +993,9 @@
                 const dutyDetailsHTML = formatDutyDetailsInline(duty, firstDuty.key);
 
                 html += `
-                    <div class="lookup-card">
+                    <div class="lookup-card" onclick="toggleLookupDetails(${groupIndex})">
                         <div class="lookup-card-header">Duty ${dutyNumber}: ${location} ${startTime}-${endTime}</div>
                         <div class="lookup-card-details">Appears on: ${dateText}</div>
-                        <div class="lookup-toggle" onclick="toggleLookupDetails(${groupIndex})">▼ View Details</div>
                         <div class="lookup-card-content" id="lookup-content-${groupIndex}">
                             ${dutyDetailsHTML}
                         </div>
@@ -983,17 +1011,14 @@
             const content = document.getElementById(`lookup-content-${index}`);
             const isExpanded = content.classList.contains('expanded');
             
-            // Close all other expanded cards
-            document.querySelectorAll('.lookup-card-content').forEach(el => {
-                el.classList.remove('expanded');
-            });
-            document.querySelectorAll('.lookup-toggle').forEach(el => {
-                el.textContent = '▼ View Details';
-            });
-            
             if (!isExpanded) {
+                // Close all others first
+                document.querySelectorAll('.lookup-card-content').forEach(el => {
+                    el.classList.remove('expanded');
+                });
                 content.classList.add('expanded');
-                event.target.textContent = '▲ Hide Details';
+            } else {
+                content.classList.remove('expanded');
             }
         }
 
