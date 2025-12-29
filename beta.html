@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OwnGOAL Beta</title>
+    <style>
+        :root {
+            --base-color: #03BC00;
+            --temp-color: #3559E8;
+        }
+     
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #1e88e5;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-top: 40px;
+        }
+
+        a {
+            color: #1e88e5;
+            text-decoration: none;
+        }
+
+        input, button {
+            height: 36px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border: 1px solid #424242;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        button {
+            background-color: #1e88e5;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #1565c0;
+        }
+
+        button:disabled {
+            background-color: #424242;
+            cursor: not-allowed;
+        }
+
+        input:not(.duty-type):not(.duty-number) {
+            text-align: center;
+        }
+
+        input::placeholder {
+            text-align: center;
+        }
+
+        /* Splash screen */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #121212;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .splash-content {
+            text-align: center;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .login-fields {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .login-fields input, .login-fields button {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .splash-title {
+            color: #1e88e5;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        /* Loading indicator */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(18, 18, 18, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-text {
+            color: #1e88e5;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        /* Input section */
+        .input-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .input-row input {
+            flex: 1;
+        }
+
+        /* Duty table */
+        .duty-rows {
+            margin-bottom: 16px;
+        }
+
+        .duty-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .duty-type {
+            width: 60px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .duty-number {
+            width: 60px;
+            text-align: center;
+        }
+
+        .duty-date {
+            width: 120px;
+        }
+
+        .duty-info {
+            color: #666;
+            max-width: 80px;
+            font-size: 12px;
+            margin-right: 24px;
+            white-space: nowrap;
+            order: -1;
+            cursor: pointer;
+        }
+
+        .duty-info:hover {
+            color: #1e88e5;
+        }
+
+        .row-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 22px;
+            padding: 0;
+            width: 24px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 4px;
+        }
+
+        .remove-row {
+            color: #ff4444;
+        }
+
+        .insert-button {
+            color: #4caf50;
+            font-size: 18px;
+        }
+
+        /* Lookup result */
+        .lookup-result {
+            background-color: #1e1e1e;
+            border: 1px solid #424242;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .lookup-header {
+            background-color: #1e88e5;
+            color: white;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lookup-header-details {
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        .lookup-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lookup-close:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .lookup-body {
+            padding: 16px;
+        }
+
+        .lookup-section {
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            font-size: 16px;
+            color: #1e88e5;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #424242;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .section-time {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .section-content {
+            margin-left: 16px;
+        }
+
+        .section-item {
+            margin-bottom: 4px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .section-label {
+            color: #888;
+            min-width: 80px;
+        }
+
+        .section-spare {
+            font-style: italic;
+            color: #888;
+            margin-left: 16px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .duty-number-lookup {
+            width: 246px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border: 1px solid #424242;
+            border-radius: 5px;
+            height: 36px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 8px;
+            }
+
+            .container {
+                width: 100%;
+                padding: 0;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            h2 {
+                font-size: 18px;
+            }
+
+            .duty-row {
+                display: flex;
+                align-items: center;
+                flex-wrap: nowrap;
+                position: relative;
+                gap: 4px;
+                margin-bottom: 8px;
+            }
+
+            .duty-info {
+                position: absolute;
+                left: 245px;
+                width: auto;
+                text-align: right;
+                font-size: 12px;
+                padding: 0;
+                margin: 0;
+                order: -1;
+                cursor: pointer;
+            }
+
+            .duty-type, .duty-number {
+                width: 55px;
+            }
+
+            .duty-date {
+                max-width: 125px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .lookup-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .lookup-header-details {
+                width: 100%;
+                text-align: left;
+            }
+
+            .section-item {
+                flex-direction: column;
+                gap: 2px;
+            }
+
+            .section-label {
+                min-width: auto;
+            }
+
+            .remove-row {
+                position: absolute;
+                right: 0px;
+                top: 40%;
+                transform: translateY(-50%);
+                font-size: 38px;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: transparent;
+                color: #ff4444;
+                border: none;
+                cursor: pointer;
+                z-index: 1;
+                pointer-events: auto;
+            }
+
+            .input-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .input-row input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-content">
+            <h1 class="splash-title">Welcome to OwnGOAL Beta!</h1>
+            <div id="loginForm">
+                <p>Please sign in</p>
+                <div class="login-fields">
+                    <input type="email" id="emailInput" placeholder="Email">
+                    <input type="password" id="passwordInput" placeholder="Password">
+                    <button id="loginButton" onclick="signIn()">Sign In</button>
+                </div>
+                <p id="loginError" style="color: #e53935; display: none;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-text">Loading duty data...</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container" id="mainContent" style="display: none;">
+        <h1>OwnGOAL Beta</h1>
+
+        <!-- Auto Calendar Builder -->
+        <h2 style="margin-top: 20px;">Auto Calendar Builder</h2>
+        <div class="input-row">
+            <input type="text" id="employeeNumber" placeholder="Employee Number (6 digits)" maxlength="6" pattern="\d{6}">
+        </div>
+        <div class="input-row">
+            <input type="date" id="fromDate">
+            <input type="date" id="toDate">
+        </div>
+        <button onclick="loadDuties()" id="loadButton" style="width: 100%;">Load Duties</button>
+
+        <div id="dutyTableSection" style="display: none;">
+            <div id="lookupResult"></div>
+            <div id="icsBuilderRows" class="duty-rows"></div>
+            <div class="button-group">
+                <button onclick="generateICS()">Download ICS</button>
+            </div>
+        </div>
+
+        <!-- Manual Lookup -->
+        <h2>Manual Duty Lookup</h2>
+        <input type="text" id="manualDutyNumber" placeholder="Enter duty number" 
+               class="duty-number-lookup" oninput="lookupDuty()">
+        <div id="manualLookupResult"></div>
+
+        <a href="#" onclick="signOut(); return false;" style="display: block; margin-top: 40px;">Sign Out</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    <script>
+        let globalDuties = {};
+        let dataLoaded = false;
+
+        const catTypes = {
+            "AL": "#415F16", "BH": "#2D1A13", "E": "#046986", "EE": "#046986",
+            "EM": "#043B3B", "M": "#043B3B", "ML": "#043B3B", "L": "#03213A",
+            "LL": "#03213A", "IT": "#7F235E", "O": "#0D5B0B", "RD": "#0D5B0B",
+            "MRD": "#0D5B0B", "LD": "#5E2708", "OAL": "#426017", "OT": "#6E0C15",
+            "T": "#7F235E"
+        };
+
+        const dayNames = {
+            "O": "Rest day", "RD": "Rest day", "AL": "Annual leave",
+            "OAL": "Owed annual leave", "MRD": "Rest day (manual)",
+            "LD": "Lieu day", "BH": "Bank holiday", "T": "Training day",
+            "SB": "Standby", "IT": "Training", "TR": "Training"
+        };
+
+        const locationAddresses = {
+            "BBO": "Beckton DLR Depot",
+            "HIL": "Poplar DLR Depot",
+            "BEDP": "Beckton DLR Depot"
+        };
+
+        // Set date picker limits
+        window.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const minDate = new Date(today);
+            minDate.setDate(today.getDate() - 7);
+            const maxDate = new Date(today);
+            maxDate.setDate(today.getDate() + 21);
+
+            document.getElementById('fromDate').min = formatDateForInput(minDate);
+            document.getElementById('fromDate').max = formatDateForInput(maxDate);
+            document.getElementById('toDate').min = formatDateForInput(minDate);
+            document.getElementById('toDate').max = formatDateForInput(maxDate);
+            document.getElementById('fromDate').value = formatDateForInput(today);
+            document.getElementById('toDate').value = formatDateForInput(maxDate);
+
+            const passwordInput = document.getElementById('passwordInput');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        signIn();
+                    }
+                });
+            }
+        });
+
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Authentication
+        function signIn() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const errorElement = document.getElementById('loginError');
+            
+            if (!email || !password) {
+                errorElement.textContent = "Please enter both email and password";
+                errorElement.style.display = "block";
+                return;
+            }
+            
+            document.getElementById('loginButton').disabled = true;
+            
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    errorElement.style.display = "none";
+                    loadGlobalData();
+                })
+                .catch((error) => {
+                    errorElement.textContent = getUserFriendlyAuthError(error);
+                    errorElement.style.display = "block";
+                    document.getElementById('loginButton').disabled = false;
+                });
+        }
+
+        function getUserFriendlyAuthError(error) {
+            switch (error.code) {
+                case 'auth/invalid-login-credentials':
+                case 'auth/user-not-found':
+                case 'auth/wrong-password':
+                case 'auth/invalid-email':
+                    return "Incorrect email or password.";
+                case 'auth/too-many-requests':
+                    return "Too many failed login attempts. Please try again later.";
+                default:
+                    return "Login error: " + error.message;
+            }
+        }
+
+        function signOut() {
+            firebase.auth().signOut().then(() => {
+                document.getElementById('splashScreen').style.display = 'flex';
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('emailInput').value = '';
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('loginButton').disabled = false;
+                dataLoaded = false;
+                globalDuties = {};
+            });
+        }
+
+        async function loadGlobalData() {
+            document.getElementById('loadingOverlay').classList.add('active');
+            
+            try {
+                const storage = firebase.storage();
+                const fileRef = storage.ref('global-duties/global-duties.json.gz');
+                const url = await fileRef.getDownloadURL();
+                
+                const response = await fetch(url);
+                const compressedData = await response.arrayBuffer();
+                
+                // Decompress
+                const decompressed = pako.ungzip(new Uint8Array(compressedData), { to: 'string' });
+                globalDuties = JSON.parse(decompressed);
+                
+                dataLoaded = true;
+                document.getElementById('loadingOverlay').classList.remove('active');
+                showMainContent();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Error loading duty data. Please try again.');
+                document.getElementById('loadingOverlay').classList.remove('active');
+                signOut();
+            }
+        }
+
+        function showMainContent() {
+            document.getElementById('splashScreen').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }
+
+        function loadDuties() {
+            const employeeNum = document.getElementById('employeeNumber').value.trim();
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+
+            if (!employeeNum || employeeNum.length !== 6 || !/^\d{6}$/.test(employeeNum)) {
+                alert('Please enter a valid 6-digit employee number');
+                return;
+            }
+
+            if (!fromDate || !toDate) {
+                alert('Please select both from and to dates');
+                return;
+            }
+
+            if (new Date(fromDate) > new Date(toDate)) {
+                alert('From date must be before or equal to To date');
+                return;
+            }
+
+            // Filter duties by employee number and date range
+            const matchedDuties = [];
+            for (const [date, duties] of Object.entries(globalDuties)) {
+                if (date >= fromDate && date <= toDate) {
+                    for (const [key, duty] of Object.entries(duties)) {
+                        if (duty.EmployeeNumbers && duty.EmployeeNumbers.includes(employeeNum)) {
+                            matchedDuties.push({ date, key, duty });
+                        }
+                    }
+                }
+            }
+
+            matchedDuties.sort((a, b) => new Date(a.date) - new Date(b.date));
+            populateDutyTable(matchedDuties);
+            document.getElementById('dutyTableSection').style.display = 'block';
+            document.getElementById('dutyTableSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function populateDutyTable(matchedDuties) {
+            const container = document.getElementById('icsBuilderRows');
+            container.innerHTML = '';
+
+            matchedDuties.forEach(({ date, key, duty }) => {
+                addDutyRowWithData(duty.DutyType, key.split('-')[0], date);
+            });
+
+            if (matchedDuties.length === 0) {
+                addDutyRowWithData('', '', '');
+            }
+        }
+
+        function addDutyRowWithData(type, number, date) {
+            const container = document.getElementById('icsBuilderRows');
+            const row = createDutyRow(type, number, date);
+            container.appendChild(row);
+        }
+
+        function createDutyRow(type = '', number = '', date = '') {
+            const row = document.createElement('div');
+            row.className = 'duty-row';
+
+            const typeInput = document.createElement('input');
+            typeInput.type = 'text';
+            typeInput.className = 'duty-type';
+            typeInput.placeholder = 'Type';
+            typeInput.value = type;
+
+            if (catTypes[type]) {
+                typeInput.style.backgroundColor = catTypes[type];
+                typeInput.style.color = 'white';
+            }
+
+            typeInput.addEventListener('input', (e) => {
+                const value = e.target.value.toUpperCase();
+                e.target.value = value;
+                const color = catTypes[value];
+                if (color) {
+                    e.target.style.backgroundColor = color;
+                    e.target.style.color = 'white';
+                } else {
+                    e.target.style.backgroundColor = '';
+                    e.target.style.color = '';
+                }
+            });
+
+            const numberInput = document.createElement('input');
+            numberInput.type = 'text';
+            numberInput.className = 'duty-number';
+            numberInput.placeholder = 'Duty';
+            numberInput.value = number;
+            numberInput.addEventListener('input', () => updateDutyInfo(row));
+
+            const dateInput = document.createElement('input');
+            dateInput.type = 'date';
+            dateInput.className = 'duty-date';
+            dateInput.value = date;
+            dateInput.addEventListener('input', () => updateDutyInfo(row));
+
+            const infoSpan = document.createElement('span');
+            infoSpan.className = 'duty-info';
+
+            const removeBtn = document.createElement('span');
+            removeBtn.className = 'row-button remove-row';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = () => {
+                const container = document.getElementById('icsBuilderRows');
+                container.removeChild(row);
+            };
+
+            const insertBtn = document.createElement('span');
+            insertBtn.className = 'row-button insert-button';
+            insertBtn.innerHTML = '↓+';
+            insertBtn.onclick = () => insertRowBelow(row);
+
+            row.appendChild(typeInput);
+            row.appendChild(numberInput);
+            row.appendChild(dateInput);
+            row.appendChild(infoSpan);
+            row.appendChild(removeBtn);
+            row.appendChild(insertBtn);
+
+            updateDutyInfo(row);
+            return row;
+        }
+
+        function insertRowBelow(currentRow) {
+            const container = document.getElementById('icsBuilderRows');
+            const currentDate = currentRow.querySelector('.duty-date').value;
+            
+            let newDate = '';
+            const nextRow = currentRow.nextElementSibling;
+            
+            if (nextRow && nextRow.classList.contains('duty-row')) {
+                const nextDate = nextRow.querySelector('.duty-date').value;
+                if (currentDate && nextDate) {
+                    const current = new Date(currentDate);
+                    const next = new Date(nextDate);
+                    const dayAfterCurrent = new Date(current);
+                    dayAfterCurrent.setDate(current.getDate() + 1);
+                    
+                    // If next date is exactly one day after current, leave blank
+                    if (formatDateForInput(dayAfterCurrent) === nextDate) {
+                        newDate = '';
+                    } else {
+                        newDate = formatDateForInput(dayAfterCurrent);
+                    }
+                } else if (currentDate) {
+                    const dayAfter = new Date(currentDate);
+                    dayAfter.setDate(dayAfter.getDate() + 1);
+                    newDate = formatDateForInput(dayAfter);
+                }
+            } else if (currentDate) {
+                const dayAfter = new Date(currentDate);
+                dayAfter.setDate(dayAfter.getDate() + 1);
+                newDate = formatDateForInput(dayAfter);
+            }
+
+            const newRow = createDutyRow('', '', newDate);
+            container.insertBefore(newRow, currentRow.nextSibling);
+        }
+
+        function updateDutyInfo(row) {
+            const infoSpan = row.querySelector('.duty-info');
+            const dutyNumber = row.querySelector('.duty-number').value;
+            const dateValue = row.querySelector('.duty-date').value;
+
+            if (!dutyNumber || !dateValue) {
+                infoSpan.textContent = '';
+                infoSpan.onclick = null;
+                return;
+            }
+
+            if (globalDuties[dateValue]) {
+                const dutyKey = Object.keys(globalDuties[dateValue]).find(key => 
+                    key.startsWith(dutyNumber + '-')
+                );
+
+                if (dutyKey) {
+                    const parts = dutyKey.split('-');
+                    infoSpan.textContent = `${parts[1]} ${parts[3]}-${parts[4]}`;
+                    infoSpan.onclick = () => showDutyDetails(dateValue, dutyKey);
+                } else {
+                    infoSpan.textContent = '';
+                    infoSpan.onclick = null;
+                }
+            } else {
+                infoSpan.textContent = '';
+                infoSpan.onclick = null;
+            }
+        }
+
+        function showDutyDetails(date, dutyKey) {
+            const duty = globalDuties[date][dutyKey];
+            if (!duty) return;
+
+            const resultDiv = document.getElementById('lookupResult');
+            resultDiv.innerHTML = formatDutyDetails(duty, dutyKey);
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function closeDutyPreview() {
+            document.getElementById('lookupResult').innerHTML = '';
+        }
+
+        function formatDutyDetails(duty, dutyId) {
+            const [number, location, endLocation, startTime, endTime] = dutyId.split('-');
+
+            let content = `
+                <div class="lookup-result">
+                    <div class="lookup-header">
+                        <div>
+                            <div>Duty ${number}: ${location} ${startTime}-${endTime}</div>
+                            <div class="lookup-header-details">
+                                Type: ${duty.TypeOfDuty} | Spread: ${duty.Spreadtime} | Paid: ${duty.PaidTime}
+                            </div>
+                        </div>
+                        <button class="lookup-close" onclick="closeDutyPreview()">×</button>
+                    </div>
+                    <div class="lookup-body">
+                        <div class="lookup-section">
+                            <div class="section-item">
+                                <span class="section-label">Book on:</span>
+                                <span>${startTime}${location ? ` at ${location}` : ''}</span>
+                            </div>
+                        </div>
+            `;
+
+            if (duty.TypeOfDuty === "SPARE" || duty.TypeOfDuty === "TRAINING" || duty.TypeOfDuty === "PANEL") {
+                content += `
+                    <div class="lookup-section">
+                        <div class="section-header">Duty Details</div>
+                        <div class="section-spare">${duty.TypeOfDuty}</div>
+                    </div>`;
+            } else {
+                content += `
+                    <div class="lookup-section">
+                        <div class="section-header">
+                            <span>First Half</span>
+                            <span class="section-time">${duty.FirstHalfLength}</span>
+                        </div>`;
+
+                if (duty.FirstHalfRunNumber === "" || duty.FirstHalfRunNumber === "TR") {
+                    content += `<div class="section-spare">${duty.TypeOfDuty}</div>`;
+                } else {
+                    content += `
+                        <div class="section-content">
+                            <div class="section-item">
+                                <span class="section-label">Run:</span>
+                                <span>${duty.FirstHalfRunNumber}</span>
+                            </div>
+                            <div class="section-item">
+                                <span class="section-label">Pick up:</span>
+                                <span>${duty.FirstHalfStartLocation} at ${duty.FirstHalfStartTime}</span>
+                            </div>
+                            <div class="section-item">
+                                <span class="section-label">Relieved:</span>
+                                <span>${duty.FirstHalfEndLocation} at ${duty.FirstHalfEndTime}</span>
+                            </div>
+                        </div>`;
+                }
+                content += `</div>`;
+
+                if (duty.FirstHalfEndTime && duty.SecondHalfStartTime) {
+                    content += `
+                        <div class="lookup-section">
+                            <div class="section-header">Break Details</div>
+                            <div class="section-content">
+                                <div class="section-item">
+                                    <span class="section-label">Duration:</span>
+                                    <span>${calculateBreakDetails(duty)}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+
+                content += `
+                    <div class="lookup-section">
+                        <div class="section-header">
+                            <span>Second Half</span>
+                            <span class="section-time">${duty.SecondHalfLength}</span>
+                        </div>`;
+
+                if (duty.SecondHalfRunNumber === "" || duty.SecondHalfRunNumber === "TR") {
+                    content += `<div class="section-spare">${duty.TypeOfDuty}</div>`;
+                } else {
+                    content += `
+                        <div class="section-content">
+                            <div class="section-item">
+                                <span class="section-label">Run:</span>
+                                <span>${duty.SecondHalfRunNumber}</span>
+                            </div>
+                            <div class="section-item">
+                                <span class="section-label">Pick up:</span>
+                                <span>${duty.SecondHalfStartLocation} at ${duty.SecondHalfStartTime}</span>
+                            </div>
+                            <div class="section-item">
+                                <span class="section-label">Relieved:</span>
+                                <span>${duty.SecondHalfEndLocation} at ${duty.SecondHalfEndTime}</span>
+                            </div>
+                        </div>`;
+                }
+                content += `</div>`;
+            }
+
+            content += `
+                <div class="lookup-section">
+                    <div class="section-item">
+                        <span class="section-label">Book off:</span>
+                        <span>${endTime}${endLocation ? ` at ${endLocation}` : ''}</span>
+                    </div>
+                </div>
+            </div>
+            </div>`;
+
+            return content;
+        }
+
+        function calculateBreakDetails(duty) {
+            if (!duty.FirstHalfEndTime || !duty.SecondHalfStartTime) return "N/A";
+
+            const [breakHours, breakMins] = calculateTimeDifference(
+                duty.FirstHalfEndTime,
+                duty.SecondHalfStartTime
+            ).split(':').map(Number);
+
+            const [mealHours, mealMins] = duty.MealBreakDuration.split(':').map(Number);
+            
+            const totalBreakMins = (breakHours * 60 + breakMins);
+            const mealBreakMins = (mealHours * 60 + mealMins);
+            const paidBreakMins = totalBreakMins - mealBreakMins;
+            
+            const paidHours = Math.floor(paidBreakMins / 60);
+            const paidMins = paidBreakMins % 60;
+            const paidBreak = `${paidHours.toString().padStart(2, '0')}:${paidMins.toString().padStart(2, '0')}`;
+
+            return `${formatTime(breakHours, breakMins)} (${duty.MealBreakDuration} unpaid + ${paidBreak} paid)`;
+        }
+
+        function calculateTimeDifference(time1, time2) {
+            const [h1, m1] = time1.split(':').map(Number);
+            const [h2, m2] = time2.split(':').map(Number);
+            
+            let diffMinutes = (h2 * 60 + m2) - (h1 * 60 + m1);
+            if (diffMinutes < 0) diffMinutes += 24 * 60;
+            
+            const hours = Math.floor(diffMinutes / 60);
+            const minutes = diffMinutes % 60;
+            return formatTime(hours, minutes);
+        }
+
+        function formatTime(hours, minutes) {
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+        // Manual lookup
+        function lookupDuty() {
+            const dutyNumber = document.getElementById('manualDutyNumber').value.trim();
+            const resultDiv = document.getElementById('manualLookupResult');
+
+            if (!dutyNumber) {
+                resultDiv.innerHTML = '';
+                return;
+            }
+
+            const foundDuties = [];
+            for (const [date, duties] of Object.entries(globalDuties)) {
+                for (const [key, duty] of Object.entries(duties)) {
+                    if (key.startsWith(dutyNumber + '-')) {
+                        foundDuties.push({ date, key, duty });
+                    }
+                }
+            }
+
+            if (foundDuties.length === 0) {
+                resultDiv.innerHTML = '<div style="color: #e53935; margin-top: 10px;">Duty not found</div>';
+                return;
+            }
+
+            const groups = groupIdenticalDuties(foundDuties);
+
+            if (groups.length === 1) {
+                resultDiv.innerHTML = formatDutyDetails(groups[0].duties[0].duty, groups[0].duties[0].key);
+            } else {
+                resultDiv.innerHTML = formatMultipleVersions(dutyNumber, groups);
+            }
+        }
+
+        function groupIdenticalDuties(foundDuties) {
+            const groups = [];
+            
+            foundDuties.forEach(item => {
+                const matchingGroup = groups.find(group => 
+                    areDutiesIdentical(group.duties[0].duty, item.duty)
+                );
+                
+                if (matchingGroup) {
+                    matchingGroup.duties.push(item);
+                } else {
+                    groups.push({ duties: [item] });
+                }
+            });
+            
+            return groups;
+        }
+
+        function areDutiesIdentical(duty1, duty2) {
+            const keyFields = [
+                'TypeOfDuty', 'Spreadtime', 'PaidTime',
+                'FirstHalfRunNumber', 'FirstHalfStartLocation', 'FirstHalfStartTime',
+                'FirstHalfEndLocation', 'FirstHalfEndTime', 'FirstHalfLength',
+                'SecondHalfRunNumber', 'SecondHalfStartLocation', 'SecondHalfStartTime',
+                'SecondHalfEndLocation', 'SecondHalfEndTime', 'SecondHalfLength',
+                'MealBreakDuration'
+            ];
+            
+            return keyFields.every(field => duty1[field] === duty2[field]);
+        }
+
+        function formatMultipleVersions(dutyNumber, groups) {
+            let content = `
+                <div class="lookup-result">
+                    <div class="lookup-header">
+                        <div>Duty ${dutyNumber}: Multiple Versions Found</div>
+                        <button class="lookup-close" onclick="document.getElementById('manualLookupResult').innerHTML = ''">×</button>
+                    </div>
+                    <div style="padding: 16px;">`;
+
+            groups.forEach((group) => {
+                const firstDuty = group.duties[0];
+                const parts = firstDuty.key.split('-');
+                const location = parts[1] || 'Unknown';
+                const startTime = parts[3] || '??:??';
+                const endTime = parts[4] || '??:??';
+
+                const dates = group.duties.map(d => d.date).sort();
+                const dateText = formatDateList(dates);
+
+                content += `
+                    <div onclick="showDutyDetails('${firstDuty.date}', '${firstDuty.key}')" style="
+                        padding: 10px; 
+                        border: 1px solid #424242; 
+                        margin: 8px 0; 
+                        border-radius: 5px; 
+                        cursor: pointer;
+                        background-color: #1e1e1e;
+                    ">
+                        <div style="font-weight: bold; font-size: 16px;">${location} ${startTime}-${endTime}</div>
+                        <div style="color: #666; font-size: 12px; margin-top: 4px;">Appears on: ${dateText}</div>
+                    </div>`;
+            });
+
+            content += `
+                    </div>
+                </div>`;
+
+            return content;
+        }
+
+        function formatDateList(dates) {
+            if (dates.length === 1) {
+                return formatDateDisplay(dates[0]);
+            }
+
+            const ranges = [];
+            let start = dates[0];
+            let prev = dates[0];
+
+            for (let i = 1; i < dates.length; i++) {
+                const current = dates[i];
+                const prevDate = new Date(prev);
+                const currentDate = new Date(current);
+                const dayDiff = (currentDate - prevDate) / (1000 * 60 * 60 * 24);
+
+                if (dayDiff === 1) {
+                    prev = current;
+                } else {
+                    if (start === prev) {
+                        ranges.push(formatDateDisplay(start));
+                    } else {
+                        ranges.push(`${formatDateDisplay(start)} to ${formatDateDisplay(prev)}`);
+                    }
+                    start = current;
+                    prev = current;
+                }
+            }
+
+            if (start === prev) {
+                ranges.push(formatDateDisplay(start));
+            } else {
+                ranges.push(`${formatDateDisplay(start)} to ${formatDateDisplay(prev)}`);
+            }
+
+            return ranges.join(', ');
+        }
+
+        function formatDateDisplay(dateStr) {
+            const [year, month, day] = dateStr.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        // ICS Generation
+        function generateICS() {
+            const rows = document.querySelectorAll('.duty-row');
+            const date = new Date();
+            const generatedDate = date.toLocaleDateString().split("/").reverse().join("");
+            
+            const validRows = Array.from(rows).filter(row => {
+                const dateStr = row.querySelector('.duty-date')?.value;
+                const dutyType = row.querySelector('.duty-type')?.value?.trim();
+                const dutyNumberInput = row.querySelector('.duty-number')?.value?.trim();
+                return dateStr && (dutyType || dutyNumberInput);
+            });
+
+            if (validRows.length === 0) {
+                alert('No duties to export');
+                return;
+            }
+            
+            let icsContent = `BEGIN:VCALENDAR
+CALSCALE:GREGORIAN
+X-LOTUS-CHARSET:UTF-8
+METHOD:PUBLISH
+PRODID:-//DLR duties//EN
+VERSION:2.0
+`;
+
+            for (let row of validRows) {
+                const dutyNumber = row.querySelector('.duty-number')?.value;
+                const dutyType = row.querySelector('.duty-type')?.value?.toUpperCase() || '';
+                const dateStr = row.querySelector('.duty-date')?.value;
+                
+                if (!dateStr) continue;
+
+                if ((dutyType === "SPARE" || dutyType === "TRAINING" || dutyType === "PANEL" || dayNames[dutyType]) || (dutyType && !dutyNumber)) {
+                    icsContent += generateSpecialDutyEvent({
+                        date: dateStr,
+                        dutyType: dutyType,
+                        dutyNumber: dutyNumber
+                    }) + "\n";
+                    continue;
+                }
+
+                if (!dutyNumber) continue;
+
+                if (globalDuties[dateStr]) {
+                    const dutyKey = Object.keys(globalDuties[dateStr]).find(key => 
+                        key.startsWith(dutyNumber + '-')
+                    );
+
+                    if (dutyKey) {
+                        const duty = globalDuties[dateStr][dutyKey];
+                        const [, location, , startTime, endTime] = dutyKey.split('-');
+                        
+                        icsContent += generateDutyEvent({
+                            date: dateStr,
+                            dutyNumber: dutyNumber,
+                            dutyType: dutyType || duty.DutyType,
+                            startTime: startTime,
+                            endTime: endTime,
+                            location: location,
+                            duty: duty
+                        }) + "\n";
+                    }
+                }
+            }
+            
+            icsContent += 'END:VCALENDAR';
+            
+            const blob = new Blob([icsContent], {type: 'text/calendar'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `dlr-duties-${generatedDate}.ics`;
+            link.click();
+        }
+
+        function generateDutyEvent(params) {
+            const { date, dutyNumber, dutyType, startTime, endTime, location, duty } = params;
+            const dateStr = formatDateForICS(date);
+            const uid = `dlr-${dateStr}-${generateId(5)}`;
+            
+            const { finishDate, finishTime } = calculateEventEnd(date, endTime);
+            const description = generateEventDescription(duty, startTime, endTime, location);
+            const locationText = locationAddresses[location] || `On ${location} Off ${location}`;
+            
+            return `BEGIN:VEVENT
+UID:${uid}
+SUMMARY:${dutyType} ${dutyNumber} ${location} ${startTime.replace(':', '')}-${endTime.replace(':', '')}
+LOCATION:${locationText}
+DTSTART;TZID=Europe/London:${dateStr}T${startTime.replace(':', '')}00
+DTEND;TZID=Europe/London:${finishDate}T${finishTime.replace(':', '')}00
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+CATEGORIES:${dutyType}
+PRIORITY:0
+STATUS:CONFIRMED
+DESCRIPTION:${description}
+END:VEVENT
+`;
+        }
+
+        function generateSpecialDutyEvent(params) {
+            const { date, dutyType, dutyNumber } = params;
+            const dateStr = formatDateForICS(date);
+            const uid = `dlr-${dateStr}-${generateId(5)}`;
+            
+            const nextDay = new Date(date);
+            nextDay.setDate(nextDay.getDate() + 1);
+            const endDate = formatDateForICS(formatDateForInput(nextDay));
+            
+            const eventTitle = dutyNumber ? 
+                `${dayNames[dutyType] || dutyType} ${dutyNumber}` :
+                (dayNames[dutyType] || dutyType);
+            
+            return `BEGIN:VEVENT
+UID:${uid}
+SUMMARY:${eventTitle}
+DTSTART;VALUE=DATE:${dateStr}
+DTEND;VALUE=DATE:${endDate}
+X-MICROSOFT-CDO-BUSYSTATUS:BUSY
+X-MICROSOFT-CDO-ALLDAYEVENT:TRUE
+CATEGORIES:${dayNames[dutyType] ? dutyType : ''}
+PRIORITY:0
+STATUS:CONFIRMED
+END:VEVENT`;
+        }
+
+        function generateEventDescription(duty, startTime, endTime, location) {
+            let desc = `Book on at ${startTime}`;
+            if (location) desc += ` ${location}`;
+            desc += `\\n`;
+
+            if (duty.TypeOfDuty === "SPARE" || duty.TypeOfDuty === "TRAINING" || duty.TypeOfDuty === "PANEL") {
+                desc += `${duty.TypeOfDuty}\\n`;
+            } else {
+                desc += `First Half (${duty.FirstHalfLength}):\\n`;
+                if (duty.FirstHalfRunNumber && duty.FirstHalfRunNumber !== "TR") {
+                    desc += `R${duty.FirstHalfRunNumber} ${duty.FirstHalfStartLocation} ${duty.FirstHalfStartTime} ${duty.FirstHalfEndTime} ${duty.FirstHalfEndLocation}\\n\\n`;
+                }
+
+                if (duty.FirstHalfEndTime && duty.SecondHalfStartTime) {
+                    desc += `Break: ${calculateBreakDetails(duty)}\\n\\n`;
+                }
+
+                desc += `Second Half (${duty.SecondHalfLength}):\\n`;
+                if (duty.SecondHalfRunNumber && duty.SecondHalfRunNumber !== "TR") {
+                    desc += `R${duty.SecondHalfRunNumber} ${duty.SecondHalfStartLocation} ${duty.SecondHalfStartTime} ${duty.SecondHalfEndTime} ${duty.SecondHalfEndLocation}\\n`;
+                }
+            }
+
+            desc += `Book off at ${endTime}`;
+            if (location) desc += ` ${location}`;
+            desc += `\\n`;
+
+            if (duty.Spreadtime) desc += `Spread time: ${duty.Spreadtime}\\n`;
+            if (duty.PaidTime) desc += `Paid time: ${duty.PaidTime}`;
+
+            return desc;
+        }
+
+        function calculateEventEnd(date, endTime) {
+            const [hours] = endTime.split(':').map(Number);
+            let finishDate = formatDateForICS(date);
+            let finishTime = endTime;
+
+            if (hours >= 24) {
+                finishTime = '23:59';
+            }
+
+            return { finishDate, finishTime };
+        }
+
+        function formatDateForICS(dateStr) {
+            if (!dateStr) return '';
+            const [year, month, day] = dateStr.split('-');
+            return `${year}${month}${day}`;
+        }
+
+        function generateId(len) {
+            const chars = 'abcdef0123456789';
+            let result = '';
+            for (let i = 0; i < len; i++) {
+                result += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return result;
+        }
+
+        // Firebase initialization
+        function loadFirebase() {
+            const loadScript = (src, callback) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = callback;
+                document.body.appendChild(script);
+            };
+            
+            loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js', () => {
+                loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js', () => {
+                    loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js', () => {
+                        const firebaseConfig = {
+                            apiKey: "AIzaSyBkKclvdWHVQ58IFG_ap0ByJA_2a8J2YXU",
+                            authDomain: "owngoal-4f34f.firebaseapp.com",
+                            projectId: "owngoal-4f34f",
+                            storageBucket: "owngoal-4f34f.firebasestorage.app",
+                            messagingSenderId: "270078133518",
+                            appId: "1:270078133518:web:36ef7431fda632bed1c35f"
+                        };
+                        
+                        firebase.initializeApp(firebaseConfig);
+                        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+                        
+                        firebase.auth().onAuthStateChanged((user) => {
+                            if (user && !dataLoaded) {
+                                loadGlobalData();
+                            }
+                        });
+                    });
+                });
+            });
+        }
+        
+        loadFirebase();
+    </script>
+</body>
+</html>
