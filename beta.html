@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OwnGOAL Beta</title>
+    <title>OwnGOAL</title>
     <style>
         :root {
             --base-color: #03BC00;
@@ -239,10 +239,13 @@
         .duty-info {
             color: #1e88e5;
             font-size: 12px;
-            white-space: nowrap;
             cursor: pointer;
             flex: 1;
             margin-right: 8px;
+            line-height: 1.3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .duty-info:hover {
@@ -360,6 +363,7 @@
             overflow: hidden;
             transform: scale(0.9);
             transition: transform 0.3s ease;
+            margin: 0 auto;
         }
 
         .duty-modal.is-visible .duty-modal-content {
@@ -464,23 +468,34 @@
 
             .duty-row {
                 gap: 6px;
+                flex-wrap: nowrap;
             }
 
             .duty-type, .duty-number {
                 width: 50px;
                 font-size: 13px;
                 height: 52px;
+                flex-shrink: 0;
             }
 
             .duty-date {
                 width: 100%;
-                max-width: 140px;
+                max-width: 126px;
                 height: 52px;
+                flex-shrink: 0;
             }
 
             .duty-info {
-                font-size: 11px;
+                font-size: 13px;
                 margin-right: 4px;
+                overflow: hidden;
+                max-width: 120px;
+                line-height: 1.2;
+            }
+            
+            .row-buttons {
+                margin-left: auto;
+                flex-shrink: 0;
             }
 
             .row-button {
@@ -497,7 +512,11 @@
             }
 
             .duty-modal {
-                padding: 1rem;
+                padding: 0.5rem;
+            }
+            
+            .duty-modal-content {
+                max-width: calc(100vw - 1rem);
             }
 
             .duty-modal-body {
@@ -519,7 +538,7 @@
     <!-- Splash Screen -->
     <div class="splash-screen" id="splashScreen">
         <div class="splash-content">
-            <h1 class="splash-title">Welcome to OwnGOAL Beta!</h1>
+            <h1 class="splash-title">Welcome to OwnGOAL!</h1>
             <div id="loginForm">
                 <p>Please sign in</p>
                 <div class="login-fields">
@@ -540,13 +559,13 @@
 
     <!-- Main Content -->
     <div class="container" id="mainContent" style="display: none;">
-        <h1>OwnGOAL Beta</h1>
+        <h1>OwnGOAL</h1>
 
         <!-- Auto Calendar Builder -->
-        <h2>Auto Calendar Builder</h2>
+        <h2>Calendar Builder</h2>
         <div class="input-section">
             <input type="text" id="employeeNumber" placeholder="Employee Number (e.g. 300123)" maxlength="6" pattern="\d{6}" style="width: 100%; margin-bottom: 12px;">
-            <div class="helper-text">Select date range (available: -7 to +21 days from today)</div>
+            <div class="helper-text">Select a date range</div>
             <div class="input-row">
                 <input type="date" id="fromDate">
                 <input type="date" id="toDate">
@@ -611,19 +630,6 @@
 
         // Set date picker limits
         window.addEventListener('DOMContentLoaded', function() {
-            const today = new Date();
-            const minDate = new Date(today);
-            minDate.setDate(today.getDate() - 7);
-            const maxDate = new Date(today);
-            maxDate.setDate(today.getDate() + 21);
-
-            document.getElementById('fromDate').min = formatDateForInput(minDate);
-            document.getElementById('fromDate').max = formatDateForInput(maxDate);
-            document.getElementById('toDate').min = formatDateForInput(minDate);
-            document.getElementById('toDate').max = formatDateForInput(maxDate);
-            document.getElementById('fromDate').value = formatDateForInput(today);
-            document.getElementById('toDate').value = formatDateForInput(maxDate);
-
             const passwordInput = document.getElementById('passwordInput');
             if (passwordInput) {
                 passwordInput.addEventListener('keypress', function(event) {
@@ -711,6 +717,27 @@
                 
                 const decompressed = pako.ungzip(new Uint8Array(compressedData), { to: 'string' });
                 globalDuties = JSON.parse(decompressed);
+                
+                // Set date picker limits based on actual data
+                const availableDates = Object.keys(globalDuties).sort();
+                if (availableDates.length > 0) {
+                    const minDate = availableDates[0];
+                    const maxDate = availableDates[availableDates.length - 1];
+                    
+                    document.getElementById('fromDate').min = minDate;
+                    document.getElementById('fromDate').max = maxDate;
+                    document.getElementById('toDate').min = minDate;
+                    document.getElementById('toDate').max = maxDate;
+                    
+                    // Set default values to today (if available) and max date
+                    const today = formatDateForInput(new Date());
+                    if (availableDates.includes(today)) {
+                        document.getElementById('fromDate').value = today;
+                    } else {
+                        document.getElementById('fromDate').value = minDate;
+                    }
+                    document.getElementById('toDate').value = maxDate;
+                }
                 
                 dataLoaded = true;
                 document.getElementById('loadingOverlay').classList.remove('active');
@@ -929,7 +956,7 @@
             const dateValue = row.querySelector('.duty-date').value;
 
             if (!dutyNumber || !dateValue) {
-                infoSpan.textContent = '';
+                infoSpan.innerHTML = '';
                 infoSpan.onclick = null;
                 return;
             }
@@ -941,14 +968,14 @@
 
                 if (dutyKey) {
                     const parts = dutyKey.split('-');
-                    infoSpan.textContent = `${parts[1]} ${parts[3]}-${parts[4]}`;
+                    infoSpan.innerHTML = `<div>${parts[1]}</div><div>${parts[3]}-${parts[4]}</div>`;
                     infoSpan.onclick = () => showDutyModal(dateValue, dutyKey);
                 } else {
-                    infoSpan.textContent = '';
+                    infoSpan.innerHTML = '';
                     infoSpan.onclick = null;
                 }
             } else {
-                infoSpan.textContent = '';
+                infoSpan.innerHTML = '';
                 infoSpan.onclick = null;
             }
         }
