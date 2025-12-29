@@ -249,33 +249,54 @@
             font-size: 18px;
         }
 
-        /* Lookup cards */
-        .lookup-card {
-            background-color: #1e1e1e;
-            border: 1px solid #424242;
-            border-radius: 8px;
-            padding: 20px;
+        /* Lookup results inline */
+        .lookup-results {
             margin-top: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
         }
 
-        .lookup-card:hover {
-            background-color: rgba(30, 136, 229, 0.1);
-            border-color: #1e88e5;
+        .lookup-card {
+            background-color: rgba(30, 136, 229, 0.05);
+            border: 1px solid rgba(30, 136, 229, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
         }
 
         .lookup-card-header {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
-            color: #ffffff;
+            color: #1e88e5;
             margin-bottom: 8px;
         }
 
         .lookup-card-details {
             font-size: 14px;
             color: #888;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
+        }
+
+        .lookup-card-content {
+            background-color: #1a1a1a;
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .lookup-card-content.expanded {
+            display: block;
+        }
+
+        .lookup-toggle {
+            color: #1e88e5;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .lookup-toggle:hover {
+            text-decoration: underline;
         }
 
         .lookup-error {
@@ -297,7 +318,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
+            padding: 1rem;
             visibility: hidden;
             opacity: 0;
             transition: opacity 0.3s ease, visibility 0s linear 0.3s;
@@ -401,7 +422,7 @@
             }
 
             input, button {
-                height: 48px;
+                height: 52px;
             }
 
             .input-section {
@@ -423,11 +444,13 @@
             .duty-type, .duty-number {
                 width: 50px;
                 font-size: 13px;
+                height: 52px;
             }
 
             .duty-date {
                 width: 100%;
                 max-width: 140px;
+                height: 52px;
             }
 
             .duty-info {
@@ -437,7 +460,7 @@
 
             .row-button {
                 width: 36px;
-                height: 48px;
+                height: 52px;
             }
 
             .button-group {
@@ -599,6 +622,7 @@
             const email = document.getElementById('emailInput').value;
             const password = document.getElementById('passwordInput').value;
             const errorElement = document.getElementById('loginError');
+            const loginButton = document.getElementById('loginButton');
             
             if (!email || !password) {
                 errorElement.textContent = "Please enter both email and password";
@@ -606,7 +630,9 @@
                 return;
             }
             
-            document.getElementById('loginButton').disabled = true;
+            loginButton.disabled = true;
+            loginButton.textContent = 'Signing in...';
+            errorElement.style.display = "none";
             
             firebase.auth().signInWithEmailAndPassword(email, password)
                 .then(() => {
@@ -616,7 +642,8 @@
                 .catch((error) => {
                     errorElement.textContent = getUserFriendlyAuthError(error);
                     errorElement.style.display = "block";
-                    document.getElementById('loginButton').disabled = false;
+                    loginButton.disabled = false;
+                    loginButton.textContent = 'Sign In';
                 });
         }
 
@@ -802,9 +829,42 @@
         function insertRowBelow(currentRow) {
             const container = document.getElementById('icsBuilderRows');
             const currentDate = currentRow.querySelector('.duty-date').value;
-            
-            let newDate = '';
             const nextRow = currentRow.nextElementSibling;
+            
+            // Check if next row exists and is empty (no type AND no duty number)
+            if (nextRow && nextRow.classList.contains('duty-row')) {
+                const nextTypeInput = nextRow.querySelector('.duty-type');
+                const nextDutyInput = nextRow.querySelector('.duty-number');
+                const nextDateInput = nextRow.querySelector('.duty-date');
+                const rowAfterNext = nextRow.nextElementSibling;
+                
+                // If next row is completely empty and there's a date gap after it
+                if (!nextTypeInput.value && !nextDutyInput.value && nextDateInput.value) {
+                    const nextDate = nextDateInput.value;
+                    const rowAfterNextDate = rowAfterNext && rowAfterNext.classList.contains('duty-row') 
+                        ? rowAfterNext.querySelector('.duty-date').value 
+                        : null;
+                    
+                    // Check if there's a gap between next row and row after
+                    if (rowAfterNextDate) {
+                        const next = new Date(nextDate);
+                        const afterNext = new Date(rowAfterNextDate);
+                        const daysDiff = (afterNext - next) / (1000 * 60 * 60 * 24);
+                        
+                        // If there's a gap, fill the next sequential date in the new row
+                        if (daysDiff > 1) {
+                            const newDate = new Date(next);
+                            newDate.setDate(next.getDate() + 1);
+                            const newRow = createDutyRow('', '', formatDateForInput(newDate));
+                            container.insertBefore(newRow, nextRow.nextSibling);
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            // Original logic
+            let newDate = '';
             
             if (nextRow && nextRow.classList.contains('duty-row')) {
                 const nextDate = nextRow.querySelector('.duty-date').value;
@@ -889,9 +949,9 @@
             }
 
             const groups = groupIdenticalDuties(foundDuties);
-            let html = '';
+            let html = '<div class="lookup-results">';
 
-            groups.forEach(group => {
+            groups.forEach((group, groupIndex) => {
                 const firstDuty = group.duties[0];
                 const parts = firstDuty.key.split('-');
                 const location = parts[1] || 'Unknown';
@@ -899,16 +959,146 @@
                 const endTime = parts[4] || '??:??';
                 const dates = group.duties.map(d => d.date).sort();
                 const dateText = formatDateList(dates);
+                const duty = firstDuty.duty;
+
+                const dutyDetailsHTML = formatDutyDetailsInline(duty, firstDuty.key);
 
                 html += `
-                    <div class="lookup-card" onclick="showDutyModal('${firstDuty.date}', '${firstDuty.key}')">
+                    <div class="lookup-card">
                         <div class="lookup-card-header">Duty ${dutyNumber}: ${location} ${startTime}-${endTime}</div>
                         <div class="lookup-card-details">Appears on: ${dateText}</div>
+                        <div class="lookup-toggle" onclick="toggleLookupDetails(${groupIndex})">▼ View Details</div>
+                        <div class="lookup-card-content" id="lookup-content-${groupIndex}">
+                            ${dutyDetailsHTML}
+                        </div>
                     </div>
                 `;
             });
 
+            html += '</div>';
             resultDiv.innerHTML = html;
+        }
+
+        function toggleLookupDetails(index) {
+            const content = document.getElementById(`lookup-content-${index}`);
+            const isExpanded = content.classList.contains('expanded');
+            
+            // Close all other expanded cards
+            document.querySelectorAll('.lookup-card-content').forEach(el => {
+                el.classList.remove('expanded');
+            });
+            document.querySelectorAll('.lookup-toggle').forEach(el => {
+                el.textContent = '▼ View Details';
+            });
+            
+            if (!isExpanded) {
+                content.classList.add('expanded');
+                event.target.textContent = '▲ Hide Details';
+            }
+        }
+
+        function formatDutyDetailsInline(duty, dutyKey) {
+            const [number, location, endLocation, startTime, endTime] = dutyKey.split('-');
+            
+            let content = `
+                <div class="section">
+                    <div class="section-item">
+                        <span class="section-label">Type:</span>
+                        <span>${duty.TypeOfDuty}</span>
+                    </div>
+                    <div class="section-item">
+                        <span class="section-label">Spread:</span>
+                        <span>${duty.Spreadtime}</span>
+                    </div>
+                    <div class="section-item">
+                        <span class="section-label">Paid:</span>
+                        <span>${duty.PaidTime}</span>
+                    </div>
+                    <div class="section-item">
+                        <span class="section-label">Book on:</span>
+                        <span>${startTime}${location ? ` at ${location}` : ''}</span>
+                    </div>
+                </div>
+            `;
+
+            if (duty.TypeOfDuty === "SPARE" || duty.TypeOfDuty === "TRAINING" || duty.TypeOfDuty === "PANEL") {
+                content += `
+                    <div class="section">
+                        <div class="section-header">Duty Details</div>
+                        <div style="margin-left: 16px; font-style: italic; color: #888;">${duty.TypeOfDuty}</div>
+                    </div>`;
+            } else {
+                content += `
+                    <div class="section">
+                        <div class="section-header">First Half (${duty.FirstHalfLength})</div>`;
+                
+                if (duty.FirstHalfRunNumber === "" || duty.FirstHalfRunNumber === "TR") {
+                    content += `<div style="margin-left: 16px; font-style: italic; color: #888;">${duty.TypeOfDuty}</div>`;
+                } else {
+                    content += `
+                        <div style="margin-left: 16px;">
+                            <div class="section-item">
+                                <span class="section-label">Run:</span>
+                                <span>${duty.FirstHalfRunNumber}</span>
+                            </div>
+                            <div class="section-item">
+                                <span class="section-label">Pick up:</span>
+                                <span>${duty.FirstHalfStartLocation} at ${duty.FirstHalfStartTime}</span>
+                            </div>
+                            <div class="section-item">
+                                <span class="section-label">Relieved:</span>
+                                <span>${duty.FirstHalfEndLocation} at ${duty.FirstHalfEndTime}</span>
+                            </div>
+                        </div>`;
+                }
+                content += `</div>`;
+
+                if (duty.FirstHalfEndTime && duty.SecondHalfStartTime) {
+                    content += `
+                        <div class="section">
+                            <div class="section-header">Break Details</div>
+                            <div class="section-item">
+                                <span class="section-label">Duration:</span>
+                                <span>${calculateBreakDetails(duty)}</span>
+                            </div>
+                        </div>`;
+                }
+
+                content += `
+                    <div class="section">
+                        <div class="section-header">Second Half (${duty.SecondHalfLength})</div>`;
+                
+                if (duty.SecondHalfRunNumber === "" || duty.SecondHalfRunNumber === "TR") {
+                    content += `<div style="margin-left: 16px; font-style: italic; color: #888;">${duty.TypeOfDuty}</div>`;
+                } else {
+                    content += `
+                        <div style="margin-left: 16px;">
+                            <div class="section-item">
+                                <span class="section-label">Run:</span>
+                                <span>${duty.SecondHalfRunNumber}</span>
+                            </div>
+                            <div class="section-item">
+                                <span class="section-label">Pick up:</span>
+                                <span>${duty.SecondHalfStartLocation} at ${duty.SecondHalfStartTime}</span>
+                            </div>
+                            <div class="section-item">
+                                <span class="section-label">Relieved:</span>
+                                <span>${duty.SecondHalfEndLocation} at ${duty.SecondHalfEndTime}</span>
+                            </div>
+                        </div>`;
+                }
+                content += `</div>`;
+            }
+
+            content += `
+                <div class="section">
+                    <div class="section-item">
+                        <span class="section-label">Book off:</span>
+                        <span>${endTime}${endLocation ? ` at ${endLocation}` : ''}</span>
+                    </div>
+                </div>`;
+
+            return content;
         }
 
         function groupIdenticalDuties(foundDuties) {
