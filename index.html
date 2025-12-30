@@ -1350,30 +1350,30 @@
                         <div style="margin-left: 16px; font-style: italic; color: #888;">${duty.TypeOfDuty}</div>
                     </div>`;
             } else {
-                content += `
-                    <div class="section">
-                        <div class="section-header">First Half (${duty.FirstHalfLength})</div>`;
-                
-                if (duty.FirstHalfRunNumber === "" || duty.FirstHalfRunNumber === "TR") {
-                    content += `<div style="margin-left: 16px; font-style: italic; color: #888;">${duty.TypeOfDuty}</div>`;
-                } else {
-                    content += `
-                        <div style="margin-left: 16px;">
-                            <div class="section-item">
-                                <span class="section-label">Run:</span>
-                                <span>${duty.FirstHalfRunNumber}</span>
-                            </div>
-                            <div class="section-item">
-                                <span class="section-label">Pick up:</span>
-                                <span>${duty.FirstHalfStartLocation} at ${duty.FirstHalfStartTime}</span>
-                            </div>
-                            <div class="section-item">
-                                <span class="section-label">Relieved:</span>
-                                <span>${duty.FirstHalfEndLocation} at ${duty.FirstHalfEndTime}</span>
-                            </div>
-                        </div>`;
-                }
-                content += `</div>`;
+				content += `
+					<div class="section">
+						<div class="section-header"><span>First Half</span><span class="section-time">${duty.FirstHalfLength}</span></div>`;
+
+				if (duty.FirstHalfRunNumber === "" || duty.FirstHalfRunNumber === "TR") {
+					content += `<div style="margin-left: 16px; font-style: italic; color: #888;">${duty.TypeOfDuty}</div>`;
+				} else {
+					content += `
+						<div style="margin-left: 16px;">
+							<div class="section-item">
+								<span class="section-label">Run:</span>
+								<span>${duty.FirstHalfRunNumber}</span>
+							</div>
+							<div class="section-item">
+								<span class="section-label">Pick up:</span>
+								<span>${duty.FirstHalfStartLocation} at ${duty.FirstHalfStartTime}</span>
+							</div>
+							<div class="section-item">
+								<span class="section-label">Relieved:</span>
+								<span>${duty.FirstHalfEndLocation} at ${duty.FirstHalfEndTime}</span>
+							</div>
+						</div>`;
+				}
+				content += `</div>`;
 
 				if (duty.FirstHalfEndTime && duty.SecondHalfStartTime) {
 					content += `
@@ -1388,30 +1388,30 @@
 						</div>`;
 				}
 
-                content += `
-                    <div class="section">
-                        <div class="section-header">Second Half (${duty.SecondHalfLength})</div>`;
-                
-                if (duty.SecondHalfRunNumber === "" || duty.SecondHalfRunNumber === "TR") {
-                    content += `<div style="margin-left: 16px; font-style: italic; color: #888;">${duty.TypeOfDuty}</div>`;
-                } else {
-                    content += `
-                        <div style="margin-left: 16px;">
-                            <div class="section-item">
-                                <span class="section-label">Run:</span>
-                                <span>${duty.SecondHalfRunNumber}</span>
-                            </div>
-                            <div class="section-item">
-                                <span class="section-label">Pick up:</span>
-                                <span>${duty.SecondHalfStartLocation} at ${duty.SecondHalfStartTime}</span>
-                            </div>
-                            <div class="section-item">
-                                <span class="section-label">Relieved:</span>
-                                <span>${duty.SecondHalfEndLocation} at ${duty.SecondHalfEndTime}</span>
-                            </div>
-                        </div>`;
-                }
-                content += `</div>`;
+				content += `
+					<div class="section">
+						<div class="section-header"><span>Second Half</span><span class="section-time">${duty.SecondHalfLength}</span></div>`;
+
+				if (duty.SecondHalfRunNumber === "" || duty.SecondHalfRunNumber === "TR") {
+					content += `<div style="margin-left: 16px; font-style: italic; color: #888;">${duty.TypeOfDuty}</div>`;
+				} else {
+					content += `
+						<div style="margin-left: 16px;">
+							<div class="section-item">
+								<span class="section-label">Run:</span>
+								<span>${duty.SecondHalfRunNumber}</span>
+							</div>
+							<div class="section-item">
+								<span class="section-label">Pick up:</span>
+								<span>${duty.SecondHalfStartLocation} at ${duty.SecondHalfStartTime}</span>
+							</div>
+							<div class="section-item">
+								<span class="section-label">Relieved:</span>
+								<span>${duty.SecondHalfEndLocation} at ${duty.SecondHalfEndTime}</span>
+							</div>
+						</div>`;
+				}
+				content += `</div>`;
             }
 
             content += `
