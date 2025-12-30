@@ -105,13 +105,13 @@
         }
 
         .warning {
-            background-color: rgba(255, 152, 0, 0.1);
-            border: 1px solid #ff9800;
+            background-color: rgba(156, 39, 176, 0.1);
+            border: 1px solid #9c27b0;
             border-radius: 5px;
             padding: 12px;
             margin-bottom: 16px;
             font-size: 14px;
-            color: #ffb74d;
+            color: #ce93d8;
         }
 
         .success {
@@ -206,7 +206,7 @@
             <input type="text" id="employeeNumber" placeholder="Employee Number (e.g. 300123)" maxlength="6">
             
             <div class="warning">
-                <strong>Warning:</strong> Anyone with this URL can view your duties. Only share it with calendar apps you trust. You can revoke it at any time.
+                <strong>Information:</strong> Anyone with this URL can view your duties. Only share it with calendar apps you trust. You can revoke it at any time.
             </div>
             
             <button id="generateBtn" onclick="generateToken()">Generate Calendar URL</button>
@@ -436,6 +436,13 @@
             document.getElementById('generateSection').classList.remove('hidden');
             document.getElementById('existingSection').classList.add('hidden');
             document.getElementById('noEmployeeSection').classList.add('hidden');
+            
+            // Reset button state
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = false;
+            btn.innerHTML = 'Generate Calendar URL';
+            document.getElementById('generateError').style.display = 'none';
+            document.getElementById('employeeNumber').value = '';
         }
 
         function showExistingToken(token, data) {
@@ -466,7 +473,7 @@
             }
 
             if (!isAdmin && employeeNumber !== currentEmployeeNumber) {
-                errorEl.textContent = "That's not your employee number";
+                errorEl.textContent = "That doesn't match your account. Please check and try again.";
                 errorEl.style.display = "block";
                 return;
             }
