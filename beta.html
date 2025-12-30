@@ -212,6 +212,12 @@
             <button id="generateBtn" onclick="generateToken()">Generate Calendar URL</button>
             <p id="generateError" class="error" style="display: none;"></p>
         </div>
+        
+        <!-- No employee number linked -->
+        <div id="noEmployeeSection" class="card hidden">
+            <h2>Account Not Set Up</h2>
+            <p>Your account hasn't been linked to an employee number yet. Please contact your administrator.</p>
+        </div>
 
         <!-- Existing token - show URL -->
         <div id="existingSection" class="card hidden">
@@ -245,6 +251,8 @@
 
         let currentUser = null;
         let currentToken = null;
+        let currentEmployeeNumber = null;
+        let isAdmin = false;
 
         // Firebase init
         function loadFirebase() {
@@ -326,13 +334,73 @@
                 document.getElementById('loginButton').innerHTML = 'Sign In';
                 currentUser = null;
                 currentToken = null;
+                currentEmployeeNumber = null;
+                isAdmin = false;
             });
+        }
+
+        function showPasswordResetForm() {
+            const modal = document.getElementById('passwordResetModal');
+            modal.style.display = 'flex';
+            const loginEmail = document.getElementById('emailInput').value;
+            if (loginEmail) {
+                document.getElementById('resetEmailInput').value = loginEmail;
+            }
+            document.getElementById('resetMessage').style.display = 'none';
+        }
+
+        function hidePasswordResetForm() {
+            document.getElementById('passwordResetModal').style.display = 'none';
+        }
+
+        function sendPasswordReset() {
+            const email = document.getElementById('resetEmailInput').value;
+            const messageEl = document.getElementById('resetMessage');
+
+            if (!email) {
+                messageEl.textContent = "Please enter your email address";
+                messageEl.style.color = "#e53935";
+                messageEl.style.display = "block";
+                return;
+            }
+
+            firebase.auth().sendPasswordResetEmail(email)
+                .then(() => {
+                    messageEl.textContent = "Password reset email sent! Check your inbox.";
+                    messageEl.style.color = "#4caf50";
+                    messageEl.style.display = "block";
+                    setTimeout(() => hidePasswordResetForm(), 3000);
+                })
+                .catch((error) => {
+                    const msg = error.code === 'auth/user-not-found' 
+                        ? "No account found with this email address"
+                        : error.code === 'auth/invalid-email'
+                        ? "Please enter a valid email address"
+                        : "Error: " + error.message;
+                    messageEl.textContent = msg;
+                    messageEl.style.color = "#e53935";
+                    messageEl.style.display = "block";
+                });
         }
 
         async function checkExistingToken() {
             const db = firebase.firestore();
             
             try {
+                // First, get the user's employee number
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                
+                if (!userDoc.exists) {
+                    showNoEmployeeSection();
+                    document.getElementById('splashScreen').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    return;
+                }
+                
+                currentEmployeeNumber = userDoc.data().employeeNumber;
+                isAdmin = userDoc.data().isAdmin === true;
+                
+                // Then check for existing token
                 const snapshot = await db.collection('calendarTokens')
                     .where('uid', '==', currentUser.uid)
                     .limit(1)
@@ -352,20 +420,28 @@
                 document.getElementById('mainContent').style.display = 'block';
             } catch (error) {
                 console.error('Error checking token:', error);
-                showGenerateSection();
+                showNoEmployeeSection();
                 document.getElementById('splashScreen').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
             }
         }
 
+        function showNoEmployeeSection() {
+            document.getElementById('generateSection').classList.add('hidden');
+            document.getElementById('existingSection').classList.add('hidden');
+            document.getElementById('noEmployeeSection').classList.remove('hidden');
+        }
+
         function showGenerateSection() {
             document.getElementById('generateSection').classList.remove('hidden');
             document.getElementById('existingSection').classList.add('hidden');
+            document.getElementById('noEmployeeSection').classList.add('hidden');
         }
 
         function showExistingToken(token, data) {
             document.getElementById('generateSection').classList.add('hidden');
             document.getElementById('existingSection').classList.remove('hidden');
+            document.getElementById('noEmployeeSection').classList.add('hidden');
             
             const url = `${CALENDAR_FUNCTION_URL}/${token}`;
             document.getElementById('calendarUrl').textContent = url;
@@ -385,6 +461,12 @@
 
             if (!employeeNumber || !/^\d{6}$/.test(employeeNumber)) {
                 errorEl.textContent = "Please enter a valid 6-digit employee number";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            if (!isAdmin && employeeNumber !== currentEmployeeNumber) {
+                errorEl.textContent = "That's not your employee number";
                 errorEl.style.display = "block";
                 return;
             }
